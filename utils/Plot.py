@@ -46,12 +46,12 @@ def PlotDisp(Coords, disp, scale=1.0, out_dir="output"):
     # 移动后位置（红色）
     ax.scatter(MovedCoords[:, 0], MovedCoords[:, 1], MovedCoords[:, 2], c='red', label='Deformed Position', s=10)
 
-    # 位移向量（箭头）
-    ax.quiver(
-        Coords[:, 0], Coords[:, 1], Coords[:, 2],  # 起点
-        Disp[:, 0], Disp[:, 1], Disp[:, 2],       # 向量分量
-        color='green', normalize=False, linewidth=0.5, label='Displacement Vector'
-    )
+    # # 位移向量（箭头）
+    # ax.quiver(
+    #     Coords[:, 0], Coords[:, 1], Coords[:, 2],  # 起点
+    #     Disp[:, 0], Disp[:, 1], Disp[:, 2],       # 向量分量
+    #     color='green', normalize=False, linewidth=0.5, label='Displacement Vector'
+    # )
 
     # plot mesh
     from Domain import Domain
