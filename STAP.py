@@ -11,7 +11,7 @@
 /*     @author: thurcni@163.com, xzhang@tsinghua.edu.cn                      */
 /*     http://www.comdyn.cn/                                                 */
 /*****************************************************************************/
-# 123
+
 Usage:
 	$ python STAP.py file_name
 or

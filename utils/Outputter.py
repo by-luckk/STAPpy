@@ -18,6 +18,7 @@ from utils.Singleton import Singleton
 from element.ElementGroup import ElementTypes
 import datetime
 import numpy as np
+from utils.Plot import PlotDisp
 
 weekday = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", 
            "Saturday", "Sunday"]
@@ -249,7 +250,7 @@ class COutputter(object):
 			self._output_file.write("\n")
 
 	def OutputNodalDisplacement(self, lcase):
-		""" Print nodal displacement """
+		""" Print nodal displacement *并生成位移可视化图* """
 		from Domain import Domain
 		FEMData = Domain()
 		NodeList = FEMData.GetNodeList()
@@ -262,14 +263,25 @@ class COutputter(object):
 		print(pre_info, end="")
 		self._output_file.write(pre_info)
 
+		# -------- 收集数据 --------
+		node_ids, disp_x, disp_y, disp_z = [], [], [], []
+
 		for n in range(FEMData.GetNUMNP()):
-			NodeList[n].WriteNodalDisplacement(self._output_file, displacement)
+			displacement_list = NodeList[n].WriteNodalDisplacement(self._output_file, displacement)
+
+			node_ids.append(n + 1)
+			disp_x.append(displacement_list[0])
+			disp_y.append(displacement_list[1])
+			disp_z.append(displacement_list[2])
 
 		print("\n", end="")
 		self._output_file.write("\n")
 
+		# -------- 绘图并保存 --------
+		Coords = np.array([[node.XYZ[0], node.XYZ[1], node.XYZ[2]] for node in NodeList])
+		PlotDisp(Coords, disp_x, disp_y, disp_z)
+
 	def OutputElementStress(self):
-		""" Calculate stresses """
 		from Domain import Domain
 		FEMData = Domain()
 
