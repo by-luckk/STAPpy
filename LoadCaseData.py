@@ -25,8 +25,8 @@ class CLoadCaseData(object):
 
 	def Allocate(self, num):
 		self.nloads = num
-		self.node = np.zeros(num, dtype=np.int)
-		self.dof = np.zeros(num, dtype=np.int)
+		self.node = np.zeros(num, dtype=np.int_)
+		self.dof = np.zeros(num, dtype=np.int_)
 		self.load = np.zeros(num, dtype=np.double)
 
 	def Read(self, input_file, lcase):
@@ -52,8 +52,8 @@ class CLoadCaseData(object):
 
 		for i in range(NL):
 			line = input_file.readline().split()
-			self.node[i] = np.int(line[0])
-			self.dof[i] = np.int(line[1])
+			self.node[i] = np.int_(line[0])
+			self.dof[i] = np.int_(line[1])
 			self.load[i] = np.double(line[2])
 
 	def Write(self, output_file, lcase):

@@ -46,7 +46,7 @@ class CBarMaterial(CMaterial):
 		"""
 		line = input_file.readline().split()
 
-		self.nset = np.int(line[0])
+		self.nset = np.int_(line[0])
 		if self.nset != mset + 1:
 			error_info = "\n*** Error *** Material sets must be inputted in order !" \
 						 "\n   Expected set : {}" \

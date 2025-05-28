@@ -35,7 +35,7 @@ class CNode(object):
 		# After call Domain.CalculateEquationNumber(),
 		# bcode stores the global equation number
 		# corresponding to each degree of freedom of the node
-		self.bcode = np.zeros(CNode.NDF, dtype=np.int)
+		self.bcode = np.zeros(CNode.NDF, dtype=np.int_)
 
 		# Node numer
 		self.NodeNumber = 0
@@ -55,9 +55,9 @@ class CNode(object):
 
 		self.NodeNumber = N
 
-		self.bcode[0] = np.int(line[1])
-		self.bcode[1] = np.int(line[2])
-		self.bcode[2] = np.int(line[3])
+		self.bcode[0] = np.int_(line[1])
+		self.bcode[1] = np.int_(line[2])
+		self.bcode[2] = np.int_(line[3])
 		self.XYZ[0] = np.double(line[4])
 		self.XYZ[1] = np.double(line[5])
 		self.XYZ[2] = np.double(line[6])

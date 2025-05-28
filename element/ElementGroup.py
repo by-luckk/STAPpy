@@ -80,6 +80,22 @@ class CElementGroup(object):
 		elif element_type == 'Q4':
 			# implementation for other element types by yourself
 			# ...
+			pass # comment or delete this line after 
+		elif element_type == 'T3':
+			# implementation for other element types by yourself
+			# ...
+			pass # comment or delete this line after implementation
+		elif element_type == 'H8':
+			# implementation for other element types by yourself
+			# ...
+			pass # comment or delete this line after implementation
+		elif element_type == 'Beam':
+			# implementation for other element types by yourself
+			# ...
+			pass # comment or delete this line after implementation
+		elif element_type == 'Plate':
+			# implementation for other element types by yourself
+			# ...
 			pass # comment or delete this line after implementation
 		else:
 			error_info = "\nType {} not available. See CElementGroup." \
