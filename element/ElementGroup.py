@@ -15,7 +15,8 @@
 import sys
 sys.path.append('../')
 from element.Bar import CBar
-from element.Material import CBarMaterial
+from element.Q4 import CQ4
+from element.Material import CBarMaterial, CQ4Material
 
 # dictionary: Define set of element types
 ElementTypes = {0:'UNDEFINED',
@@ -78,9 +79,7 @@ class CElementGroup(object):
 		if element_type == 'Bar':
 			self._ElementList = [CBar() for _ in range(amount)]
 		elif element_type == 'Q4':
-			# implementation for other element types by yourself
-			# ...
-			pass # comment or delete this line after 
+			self._ElementList = [CQ4() for _ in range(amount)]
 		elif element_type == 'T3':
 			# implementation for other element types by yourself
 			# ...
@@ -117,9 +116,7 @@ class CElementGroup(object):
 		if element_type == 'Bar':
 			self._MaterialList = [CBarMaterial() for _ in range(amount)]
 		elif element_type == 'Q4':
-			# implementation for other element types by yourself
-			# ...
-			pass # comment or delete this line after implementation
+			self._MaterialList = [CQ4Material() for _ in range(amount)]
 		else:
 			error_info = "\nType {} not available. See CElementGroup." \
 						 "AllocateMaterials.".format(self._ElementType)
