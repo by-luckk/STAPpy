@@ -66,3 +66,34 @@ class CBarMaterial(CMaterial):
 		print(material_info, end='')
 		# write the material info to output file
 		output_file.write(material_info)
+
+class CQ4Material(CMaterial):
+    ### Q4单元
+    ### 增加
+    def __init__(self):
+        super().__init__()
+        self.thickness = 0.0  # 单元厚度
+        self.nu = 0.0         # 泊松比
+        self.plane_stress = True  # 平面应力或平面应变
+
+    def Read(self, input_file, mset):
+        line = input_file.readline().split()
+
+        self.nset = np.int_(line[0])
+        if self.nset != mset + 1:
+            error_info = "\n*** Error *** Material sets must be inputted in order !" \
+                         "\n   Expected set : {}" \
+                         "\n   Provided set : {}".format(mset + 1, self.nset)
+            raise ValueError(error_info)
+
+        self.E = np.double(line[1])
+        self.nu = np.double(line[2])
+        self.thickness = np.double(line[3])
+        if len(line) > 4:
+            self.plane_stress = bool(int(line[4]))
+
+    def Write(self, output_file):
+        material_info = "%5d%16.6e%16.6e%16.6e%5d\n" % (
+            self.nset, self.E, self.nu, self.thickness, int(self.plane_stress))
+        print(material_info, end='')
+        output_file.write(material_info)

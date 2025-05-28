@@ -149,9 +149,9 @@ class COutputter(object):
 			if element_type == 'Bar':
 				self.PrintBarElementData(EleGrp)
 			elif element_type == 'Q4':
-				# implementation for other element types by yourself
-				# ...
-				pass  # comment or delete this line after implementation
+				self.PrintQ4ElementData(EleGrp)
+				# pass  # comment or delete this line after implementation
+    
 			else:
 				error_info = "\n*** Error *** Elment type {} has not been " \
 							 "implemented.\n\n".format(ElementType)
@@ -189,6 +189,42 @@ class COutputter(object):
 
 		print("\n", end="")
 		self._output_file.write("\n")
+  
+## Q4单元
+	def PrintQ4ElementData(self, EleGrp):
+		""" Output Q4 element data """
+		from Domain import Domain
+		FEMData = Domain()
+
+		ElementGroup = FEMData.GetEleGrpList()[EleGrp]
+		NUMMAT = ElementGroup.GetNUMMAT()
+
+		pre_info = " M A T E R I A L   D E F I N I T I O N\n\n" \
+				" NUMBER OF DIFFERENT SETS OF MATERIAL\n" \
+				" AND CROSS-SECTIONAL  CONSTANTS  . . . .( NPAR(3) ) . . =%5d\n\n" \
+				"  SET       YOUNG'S     POISSON'S     THICKNESS    PLANE\n" \
+				" NUMBER     MODULUS       RATIO                     STRESS\n" \
+				"               E            nu            t            (1/0)\n" % NUMMAT
+		print(pre_info, end='')
+		self._output_file.write(pre_info)
+
+		for mset in range(NUMMAT):
+			ElementGroup.GetMaterial(mset).Write(self._output_file)
+
+		pre_info = "\n\n E L E M E N T   I N F O R M A T I O N\n" \
+				" ELEMENT     NODE     NODE     NODE     NODE       MATERIAL\n" \
+				" NUMBER-N      I        J        K        L       SET NUMBER\n"
+		print(pre_info, end='')
+		self._output_file.write(pre_info)
+
+		NUME = ElementGroup.GetNUME()
+		for Ele in range(NUME):
+			ElementGroup[Ele].Write(self._output_file, Ele)
+
+		print("\n", end='')
+		self._output_file.write("\n")
+
+## 其他单元Print
 
 	def OutputLoadInfo(self):
 		""" Print load data """
