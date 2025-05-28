@@ -12,6 +12,7 @@
 /*     http://www.comdyn.cn/                                                 */
 /*****************************************************************************/
 """
+# test
 from utils.Singleton import Singleton
 from utils.Outputter import COutputter
 from element.Node import CNode
