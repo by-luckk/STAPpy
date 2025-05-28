@@ -97,6 +97,10 @@ class CElementGroup(object):
 			# implementation for other element types by yourself
 			# ...
 			pass # comment or delete this line after implementation
+		elif element_type == 'Shell':
+			# implementation for other element types by yourself
+			# ...
+			pass # comment or delete this line after implementation
 		else:
 			error_info = "\nType {} not available. See CElementGroup." \
 						 "AllocateElement.".format(self._ElementType)
