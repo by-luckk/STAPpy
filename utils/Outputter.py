@@ -249,7 +249,7 @@ class COutputter(object):
 			print("\n", end="")
 			self._output_file.write("\n")
 
-	def OutputNodalDisplacement(self, lcase):
+	def OutputNodalDisplacement(self, lcase, vis_scale=1.0):
 		""" Print nodal displacement *并生成位移可视化图* """
 		from Domain import Domain
 		FEMData = Domain()
@@ -264,22 +264,20 @@ class COutputter(object):
 		self._output_file.write(pre_info)
 
 		# -------- 收集数据 --------
-		node_ids, disp_x, disp_y, disp_z = [], [], [], []
+		node_ids, disp = [], []
 
 		for n in range(FEMData.GetNUMNP()):
 			displacement_list = NodeList[n].WriteNodalDisplacement(self._output_file, displacement)
 
 			node_ids.append(n + 1)
-			disp_x.append(displacement_list[0])
-			disp_y.append(displacement_list[1])
-			disp_z.append(displacement_list[2])
+			disp.append(displacement_list)
 
 		print("\n", end="")
 		self._output_file.write("\n")
 
 		# -------- 绘图并保存 --------
 		Coords = np.array([[node.XYZ[0], node.XYZ[1], node.XYZ[2]] for node in NodeList])
-		PlotDisp(Coords, disp_x, disp_y, disp_z)
+		PlotDisp(Coords, disp, scale=vis_scale, out_dir="output")
 
 	def OutputElementStress(self):
 		from Domain import Domain

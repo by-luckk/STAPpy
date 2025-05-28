@@ -86,7 +86,7 @@ if __name__ == "__main__":
 		# Reduce right-hand-side force vector and back substitute
 		Solver.BackSubstitution(FEMData.GetForce())
 
-		Output.OutputNodalDisplacement(lcase)
+		Output.OutputNodalDisplacement(lcase, vis_scale=3e4)
 
 	time_solution = timer.ElapsedTime()
 

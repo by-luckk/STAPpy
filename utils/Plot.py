@@ -2,6 +2,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from element.ElementGroup import ElementTypes
 
 def set_axes_equal(ax):
     '''Make 3D plot axes have equal scale'''
@@ -22,15 +23,11 @@ def set_axes_equal(ax):
     ax.set_ylim3d([y_middle - plot_radius, y_middle + plot_radius])
     ax.set_zlim3d([z_middle - plot_radius, z_middle + plot_radius])
 
-def PlotDisp(Coords, disp_x, disp_y, disp_z):
-    out_dir = "output"
+def PlotDisp(Coords, disp, scale=1.0, out_dir="output"):
     os.makedirs(out_dir, exist_ok=True)
 
     # 位移量（确保为 numpy 数组）
-    disp_x = np.array(disp_x)
-    disp_y = np.array(disp_y)
-    disp_z = np.array(disp_z)
-    Disp = np.stack([disp_x, disp_y, disp_z], axis=1)  # (N, 3)
+    Disp = np.array(disp) * scale
 
     # 移动后的位置
     MovedCoords = Coords + Disp
@@ -42,6 +39,10 @@ def PlotDisp(Coords, disp_x, disp_y, disp_z):
     # 原始位置（蓝色）
     ax.scatter(Coords[:, 0], Coords[:, 1], Coords[:, 2], c='blue', label='Original Position', s=10)
 
+    # 标记节点编号
+    for i, (x, y, z) in enumerate(Coords):
+        ax.text(x, y, z, f'{i + 1}', color='black', fontsize=8)
+
     # 移动后位置（红色）
     ax.scatter(MovedCoords[:, 0], MovedCoords[:, 1], MovedCoords[:, 2], c='red', label='Deformed Position', s=10)
 
@@ -51,6 +52,30 @@ def PlotDisp(Coords, disp_x, disp_y, disp_z):
         Disp[:, 0], Disp[:, 1], Disp[:, 2],       # 向量分量
         color='green', normalize=False, linewidth=0.5, label='Displacement Vector'
     )
+
+    # plot mesh
+    from Domain import Domain
+    FEMData = Domain()
+    # get mesh
+    NUMEG = FEMData.GetNUMEG()
+    for ELeGrpIndex in range(NUMEG):
+        EleGrp = FEMData.GetEleGrpList()[ELeGrpIndex]
+        NUME = EleGrp.GetNUME()
+        ElementType = EleGrp.GetElementType()
+        element_type = ElementTypes.get(ElementType)
+
+        # TODO: check if it works for all element types
+        # Ideally, if nodes are defined in order, it should work for all element types
+        if element_type == 'Bar':
+            for i in range(NUME):
+                element = EleGrp[i]
+                nodes = element._nodes
+                x = [node.XYZ[0] for node in nodes]
+                y = [node.XYZ[1] for node in nodes]
+                z = [node.XYZ[2] for node in nodes]
+                nn = [node.NodeNumber - 1 for node in nodes]
+                ax.plot(x, y, z, color='blue', linewidth=1)
+                ax.plot(x+Disp[nn, 0], y+Disp[nn, 1], z+Disp[nn, 2], color='red', linewidth=1)
 
     # 标签与图例
     ax.set_xlabel("X")
