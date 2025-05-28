@@ -26,7 +26,7 @@ class CBar(CElement):
 		self._nodes = [None for _ in range(self._NEN)]
 
 		self._ND = 6
-		self._LocationMatrix = np.zeros(self._ND, dtype=np.int)
+		self._LocationMatrix = np.zeros(self._ND, dtype=np.int_)
 
 	def Read(self, input_file, Ele, MaterialSets, NodeList):
 		"""
