@@ -261,7 +261,6 @@ class Domain(object):
 
 			if dof:
 				self.Force[dof - 1] += LoadData.load[lnum]
-
 		return True
 
 	def AllocateMatrices(self):
