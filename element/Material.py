@@ -53,8 +53,8 @@ class CBarMaterial(CMaterial):
 						 "\n   Provided set : {}".format(mset + 1, self.nset)
 			raise ValueError(error_info)
 
-		self.E = np.double(line[1])
-		self.Area = np.double(line[2])
+		self.E = float(line[1])
+		self.Area = float(line[2])
 
 	def Write(self, output_file):
 		"""
@@ -86,9 +86,9 @@ class CQ4Material(CMaterial):
                          "\n   Provided set : {}".format(mset + 1, self.nset)
             raise ValueError(error_info)
 
-        self.E = np.double(line[1])
-        self.nu = np.double(line[2])
-        self.thickness = np.double(line[3])
+        self.E = float(line[1])
+        self.nu = float(line[2])
+        self.thickness = float(line[3])
         if len(line) > 4:
             self.plane_stress = bool(int(line[4]))
 
@@ -119,8 +119,8 @@ class CH8Material(CMaterial):
                           f"\n   Provided set : {self.nset}")
             raise ValueError(error_info)
 
-        self.E = np.double(line[1])
-        self.nu = np.double(line[2]) # Poisson's ratio
+        self.E = float(line[1])
+        self.nu = float(line[2]) # Poisson's ratio
 
     def Write(self, output_file):
         """
@@ -134,7 +134,48 @@ class CH8Material(CMaterial):
         # write the material info to output file
         output_file.write(material_info)
 
-		
+class CT3Material(CMaterial):
+    """Material definition for a 3‑node plane‑stress triangle."""
+
+    def __init__(self):
+        super().__init__()
+        self.E         = 0.0     # Young's modulus
+        self.nu        = 0.0     # Poisson's ratio
+        self.thickness = 1.0     # Plate thickness (default 1)
+
+    # ------------------------------------------------------------------
+    #                          I / O ROUTINES
+    # ------------------------------------------------------------------
+    def Read(self, input_file, mset):
+        """Read a single material card.
+
+        Expected line format:
+            mset   E   nu   thickness
+        """
+        line = input_file.readline().split()
+        if not line:
+            raise EOFError("Unexpected EOF while reading material data")
+
+        self.nset = int(line[0])
+        if self.nset != mset + 1:
+            error_info = ("\n*** Error *** Material sets must be inputted in order !"
+                          f"\n   Expected set : {mset + 1}"
+                          f"\n   Provided set : {self.nset}")
+            raise ValueError(error_info)
+
+        try:
+            self.E         = float(line[1])
+            self.nu        = float(line[2])
+            self.thickness = float(line[3]) if len(line) > 3 else 1.0
+        except (ValueError, IndexError):
+            raise ValueError("*** Error *** Incorrect CT3 material card format!")
+
+    def Write(self, output_file):
+        """Echo the material card (same format as input)."""
+        material_info = f"{self.nset:5d}{self.E:16.6e}{self.nu:16.6e}{self.thickness:16.6e}\n"
+        print(material_info, end="")           # console echo
+        output_file.write(material_info)
+
 class CPlateMaterial(CMaterial):
     """ Material class for plate element """
     def __init__(self):
@@ -159,15 +200,15 @@ class CPlateMaterial(CMaterial):
             raise ValueError(error_info)
 
         # 读取必要参数
-        self.E = np.double(line[1])
-        self.nu = np.double(line[2])
-        self.thickness = np.double(line[3])
+        self.E = float(line[1])
+        self.nu = float(line[2])
+        self.thickness = float(line[3])
         
         # 读取可选参数
         if len(line) > 4:
-            self.density = np.double(line[4])
+            self.density = float(line[4])
         if len(line) > 5:
-            self.shear_correction = np.double(line[5])
+            self.shear_correction = float(line[5])
 
     def Write(self, output_file):
         """

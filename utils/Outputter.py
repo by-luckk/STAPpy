@@ -151,6 +151,10 @@ class COutputter(object):
 				self.PrintBarElementData(EleGrp)
 			elif element_type == 'Q4':
 				self.PrintQ4ElementData(EleGrp)
+			elif element_type == 'T3':
+				self.PrintT3ElementData(EleGrp)
+			elif element_type == 'H8':
+				self.PrintH8ElementData(EleGrp)
 				# pass  # comment or delete this line after implementation
     
 			else:
@@ -191,8 +195,44 @@ class COutputter(object):
 
 		print("\n", end="")
 		self._output_file.write("\n")
+
+	def PrintT3ElementData(self, EleGrp):
+		"""
+		Output T3 (CST) element data in a style parallel to PrintBarElementData.
+		"""
+		from Domain import Domain
+		FEMData = Domain()
+		ElementGroup = FEMData.GetEleGrpList()[EleGrp]
+		NUMMAT = ElementGroup.GetNUMMAT()
+
+		pre_info = (
+			" M A T E R I A L   D E F I N I T I O N\n\n"
+			" NUMBER OF DIFFERENT SETS OF MATERIAL\n"
+			" AND PLATE  CONSTANTS  . . . .( NPAR(3) ) . . =%5d\n\n"
+			"  SET       YOUNG'S      POISSON     THICKNESS\n"
+			" NUMBER     MODULUS        RATIO          t\n" % NUMMAT
+		)
+		print(pre_info, end="")
+		self._output_file.write(pre_info)
+
+		for mset in range(NUMMAT):
+			ElementGroup.GetMaterial(mset).Write(self._output_file)
+		pre_info = (
+			"\n\n E L E M E N T   I N F O R M A T I O N\n"
+			" ELEMENT     NODE     NODE     NODE     MATERIAL\n"
+			" NUMBER-N      I        J        K    SET NUMBER\n"
+		)
+		print(pre_info, end="")
+		self._output_file.write(pre_info)
+
+		NUME = ElementGroup.GetNUME()
+		for Ele in range(NUME):
+			ElementGroup[Ele].Write(self._output_file, Ele)
+
+		print("\n", end="")
+		self._output_file.write("\n")
   
-## Q4单元
+	## Q4单元
 	def PrintQ4ElementData(self, EleGrp):
 		""" Output Q4 element data """
 		from Domain import Domain
@@ -225,6 +265,38 @@ class COutputter(object):
 
 		print("\n", end='')
 		self._output_file.write("\n")
+	def PrintH8ElementData(self, EleGrp): # NEW METHOD FOR H8
+		""" Output H8 element data """
+		from Domain import Domain
+		FEMData = Domain()
+
+		ElementGroup = FEMData.GetEleGrpList()[EleGrp]
+		NUMMAT = ElementGroup.GetNUMMAT()
+
+		pre_info = " M A T E R I A L   D E F I N I T I O N\n\n" \
+				" NUMBER OF DIFFERENT SETS OF MATERIAL  . . . .( NPAR(3) ) . . =%5d\n\n" \
+				"  SET       YOUNG'S     POISSON'S\n" \
+				" NUMBER     MODULUS       RATIO\n" \
+				"               E            nu\n" % NUMMAT
+		print(pre_info, end='')
+		self._output_file.write(pre_info)
+
+		for mset in range(NUMMAT):
+			ElementGroup.GetMaterial(mset).Write(self._output_file)
+
+		pre_info = "\n\n E L E M E N T   I N F O R M A T I O N\n" \
+				" ELEMENT     N1       N2       N3       N4       N5       N6       N7       N8       MATERIAL\n" \
+				" NUMBER-N                                                                          SET NUMBER\n" # Adjusted for 8 nodes
+		print(pre_info, end='')
+		self._output_file.write(pre_info)
+
+		NUME = ElementGroup.GetNUME()
+		for Ele in range(NUME):
+			ElementGroup[Ele].Write(self._output_file, Ele) # Assumes CH8.Write handles 8 nodes
+
+		print("\n", end='')
+		self._output_file.write("\n")
+
 	
 	# 其他单元Print
 	def OutputLoadInfo(self):
@@ -314,6 +386,8 @@ class COutputter(object):
 					stress_info = "%5d%22.6e%18.6e\n"%(Ele+1, stress[0]*material.Area, stress[0])
 					print(stress_info, end="")
 					self._output_file.write(stress_info)
+			elif element_type == 'T3':
+				pass
 			elif element_type == 'Q4':
 				# implementation for other element types by yourself
 				# ...
