@@ -76,6 +76,29 @@ def PlotDisp(Coords, disp, scale=1.0, out_dir="output"):
                 nn = [node.NodeNumber - 1 for node in nodes]
                 ax.plot(x, y, z, color='blue', linewidth=1)
                 ax.plot(x+Disp[nn, 0], y+Disp[nn, 1], z+Disp[nn, 2], color='red', linewidth=1)
+        if element_type == 'Q4' or element_type == 'T3':
+            for i in range(NUME):
+                element = EleGrp[i]
+                nodes = element._nodes
+                x = [node.XYZ[0] for node in nodes]
+                y = [node.XYZ[1] for node in nodes]
+                z = [node.XYZ[2] for node in nodes]
+                nn = [node.NodeNumber - 1 for node in nodes]
+                
+                x_closed = x + [x[0]]
+                y_closed = y + [y[0]]
+                z_closed = z + [z[0]]
+                
+                ax.plot(x_closed, y_closed, z_closed, color='blue', linewidth=1)
+                
+                x_disp = x + Disp[nn, 0]
+                y_disp = y + Disp[nn, 1]
+                z_disp = z + Disp[nn, 2]
+                x_disp_closed = np.append(x_disp, x_disp[0])
+                y_disp_closed = np.append(y_disp, y_disp[0])
+                z_disp_closed = np.append(z_disp, z_disp[0])
+                
+                ax.plot(x_disp_closed, y_disp_closed, z_disp_closed, color='red', linewidth=1)
 
     # 标签与图例
     ax.set_xlabel("X")

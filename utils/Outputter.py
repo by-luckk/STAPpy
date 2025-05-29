@@ -151,8 +151,8 @@ class COutputter(object):
 				self.PrintBarElementData(EleGrp)
 			elif element_type == 'Q4':
 				self.PrintQ4ElementData(EleGrp)
-				# pass  # comment or delete this line after implementation
-    
+			elif element_type == 'T3':
+				self.PrintT3ElementData(EleGrp)
 			else:
 				error_info = "\n*** Error *** Elment type {} has not been " \
 							 "implemented.\n\n".format(ElementType)
@@ -190,8 +190,44 @@ class COutputter(object):
 
 		print("\n", end="")
 		self._output_file.write("\n")
+
+	def PrintT3ElementData(self, EleGrp):
+		"""
+		Output T3 (CST) element data in a style parallel to PrintBarElementData.
+		"""
+		from Domain import Domain
+		FEMData = Domain()
+		ElementGroup = FEMData.GetEleGrpList()[EleGrp]
+		NUMMAT = ElementGroup.GetNUMMAT()
+
+		pre_info = (
+			" M A T E R I A L   D E F I N I T I O N\n\n"
+			" NUMBER OF DIFFERENT SETS OF MATERIAL\n"
+			" AND PLATE  CONSTANTS  . . . .( NPAR(3) ) . . =%5d\n\n"
+			"  SET       YOUNG'S      POISSON     THICKNESS\n"
+			" NUMBER     MODULUS        RATIO          t\n" % NUMMAT
+		)
+		print(pre_info, end="")
+		self._output_file.write(pre_info)
+
+		for mset in range(NUMMAT):
+			ElementGroup.GetMaterial(mset).Write(self._output_file)
+		pre_info = (
+			"\n\n E L E M E N T   I N F O R M A T I O N\n"
+			" ELEMENT     NODE     NODE     NODE     MATERIAL\n"
+			" NUMBER-N      I        J        K    SET NUMBER\n"
+		)
+		print(pre_info, end="")
+		self._output_file.write(pre_info)
+
+		NUME = ElementGroup.GetNUME()
+		for Ele in range(NUME):
+			ElementGroup[Ele].Write(self._output_file, Ele)
+
+		print("\n", end="")
+		self._output_file.write("\n")
   
-## Q4单元
+	## Q4单元
 	def PrintQ4ElementData(self, EleGrp):
 		""" Output Q4 element data """
 		from Domain import Domain
@@ -314,6 +350,8 @@ class COutputter(object):
 					stress_info = "%5d%22.6e%18.6e\n"%(Ele+1, stress[0]*material.Area, stress[0])
 					print(stress_info, end="")
 					self._output_file.write(stress_info)
+			elif element_type == 'T3':
+				pass
 			elif element_type == 'Q4':
 				# implementation for other element types by yourself
 				# ...
