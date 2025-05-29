@@ -224,9 +224,8 @@ class COutputter(object):
 
 		print("\n", end='')
 		self._output_file.write("\n")
-
-## 其他单元Print
-
+	
+	# 其他单元Print
 	def OutputLoadInfo(self):
 		""" Print load data """
 		from Domain import Domain
