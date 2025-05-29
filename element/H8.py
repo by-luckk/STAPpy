@@ -150,6 +150,7 @@ class CH8(CElement):
             J_mat = dN_dXiEtaZeta @ node_coords  # (3x8) @ (8x3) = (3x3)
 
             det_J = np.linalg.det(J_mat)
+
             if det_J <= 1e-12: # Using a small tolerance instead of strict zero
                 # This can happen for distorted elements.
                 raise ValueError(
@@ -204,7 +205,7 @@ class CH8(CElement):
         # Store the upper triangular part of Ke_full into stiffness_array, column by column
         idx = 0
         for j_col in range(self._ND):  # Iterate over columns
-            for i_row in range(j_col + 1):  # Iterate over rows (up to and including diagonal)
+            for i_row in range(j_col, -1, -1):  # Iterate over rows (up to and including diagonal)
                 stiffness_array[idx] = Ke_full[i_row, j_col]
                 idx += 1
 

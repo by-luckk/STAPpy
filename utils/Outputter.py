@@ -391,6 +391,22 @@ class COutputter(object):
 				# implementation for other element types by yourself
 				# ...
 				pass  # comment or delete this line after implementation
+			elif element_type == 'H8':
+				pre_info = ("  ELEMENT      SIGMA_XX      SIGMA_YY      SIGMA_ZZ        TAU_XY        TAU_YZ        TAU_ZX\n"
+							"  NUMBER                  (Stresses at element center: xi=0, eta=0, zeta=0)\n")
+				print(pre_info, end="")
+				self._output_file.write(pre_info)
+
+				stress = np.zeros(6) # H8 element has 6 stress components [s_xx, s_yy, s_zz, t_xy, t_yz, t_zx]
+
+				for Ele in range(NUME):
+					Element = EleGrp[Ele]
+					Element.ElementStress(stress, displacement) # This calls CH8.ElementStress
+
+					stress_info = "%5d%14.6e%14.6e%14.6e%14.6e%14.6e%14.6e\n"%(
+						Ele+1, stress[0], stress[1], stress[2], stress[3], stress[4], stress[5])
+					print(stress_info, end="")
+					self._output_file.write(stress_info)
 			else:
 				error_info = "\n*** Error *** Elment type {} has not been " \
 							 "implemented.\n\n".format(ElementType)
