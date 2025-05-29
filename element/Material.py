@@ -97,6 +97,43 @@ class CQ4Material(CMaterial):
             self.nset, self.E, self.nu, self.thickness, int(self.plane_stress))
         print(material_info, end='')
         output_file.write(material_info)
+
+class CH8Material(CMaterial):
+    """ Material class for H8 (3D solid) element """
+    def __init__(self):
+        super().__init__()
+        # E and nu are inherited from CMaterial.
+        # H8 elements typically only need E and nu for isotropic material definition.
+
+    def Read(self, input_file, mset):
+        """
+        Read material data from stream Input for H8 element.
+        Expected format: nset E nu
+        """
+        line = input_file.readline().split()
+
+        self.nset = np.int_(line[0])
+        if self.nset != mset + 1:
+            error_info = (f"\n*** Error *** Material sets must be inputted in order !"
+                          f"\n   Expected set : {mset + 1}"
+                          f"\n   Provided set : {self.nset}")
+            raise ValueError(error_info)
+
+        self.E = np.double(line[1])
+        self.nu = np.double(line[2]) # Poisson's ratio
+
+    def Write(self, output_file):
+        """
+        Write H8 material data to Stream.
+        """
+        # Format: nset E nu
+        material_info = "%5d%16.6e%16.6e\n" % (self.nset, self.E, self.nu)
+
+        # print the material info on the screen
+        print(material_info, end='')
+        # write the material info to output file
+        output_file.write(material_info)
+
 		
 class CPlateMaterial(CMaterial):
     """ Material class for plate element """
