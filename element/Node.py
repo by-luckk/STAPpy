@@ -94,15 +94,19 @@ class CNode(object):
 		Write nodal displacement
 		"""
 		displacement_info = "%5d        "%self.NodeNumber
-
+		displacement_list = []
 		for dof in range(CNode.NDF):
 			if self.bcode[dof] == 0:
 				displacement_info += "%18.6e"%0.0
+				displacement_list.append(0.0)
 			else:
 				displacement_info += "%18.6e"%displacement[self.bcode[dof] - 1]
+				displacement_list.append(displacement[self.bcode[dof] - 1])
 
 		displacement_info += '\n'
 		# print the nodal info on the screen
 		print(displacement_info, end='')
 		# write the nodal info to output file
 		output_file.write(displacement_info)
+
+		return displacement_list

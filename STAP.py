@@ -11,7 +11,7 @@
 /*     @author: thurcni@163.com, xzhang@tsinghua.edu.cn                      */
 /*     http://www.comdyn.cn/                                                 */
 /*****************************************************************************/
-# 123
+
 Usage:
 	$ python STAP.py file_name
 or
@@ -86,7 +86,7 @@ if __name__ == "__main__":
 		# Reduce right-hand-side force vector and back substitute
 		Solver.BackSubstitution(FEMData.GetForce())
 
-		Output.OutputNodalDisplacement(lcase)
+		Output.OutputNodalDisplacement(lcase, vis_scale=3e4)
 
 	time_solution = timer.ElapsedTime()
 

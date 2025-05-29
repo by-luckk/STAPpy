@@ -17,9 +17,6 @@ sys.path.append('../')
 import numpy as np
 from element.Element import CElement
 
-import numpy as np
-from element.Element import CElement
-
 class CQ4(CElement):
     """ Q4 Element class """
     def __init__(self):
