@@ -158,9 +158,10 @@ class COutputter(object):
 				# pass  # comment or delete this line after implementation
     
 			else:
-				error_info = "\n*** Error *** Elment type {} has not been " \
-							 "implemented.\n\n".format(ElementType)
-				raise ValueError(error_info)
+				# error_info = "\n*** Error *** Elment type {} has not been " \
+				# 			 "implemented.\n\n".format(ElementType)
+				# raise ValueError(error_info)
+				pass
 
 	def PrintBarElementData(self, EleGrp):
 		""" Output bar element data """
@@ -408,9 +409,10 @@ class COutputter(object):
 					print(stress_info, end="")
 					self._output_file.write(stress_info)
 			else:
-				error_info = "\n*** Error *** Elment type {} has not been " \
-							 "implemented.\n\n".format(ElementType)
-				raise ValueError(error_info)
+				# error_info = "\n*** Error *** Elment type {} has not been " \
+				# 			 "implemented.\n\n".format(ElementType)
+				# raise ValueError(error_info)
+				pass
 
 	def OutputTotalSystemData(self):
 		""" Print total system data """

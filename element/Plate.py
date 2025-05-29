@@ -118,6 +118,9 @@ class CPlate(CElement):
             J[0, 1] += dN_dxi[i] * y
             J[1, 0] += dN_deta[i] * x
             J[1, 1] += dN_deta[i] * y
+        detJ = np.linalg.det(J)
+        if detJ <= 0:
+            raise ValueError("Negative Jacobian determinant detected")
         return J
 
     def _bending_strain_displacement_matrix(self, dN_dx, dN_dy):
@@ -197,12 +200,34 @@ class CPlate(CElement):
             
             # 计算单元刚度矩阵贡献
             K += np.dot(B_b.T, np.dot(D_b, B_b)) * detJ * weight  # 弯曲部分
-            K += np.dot(B_s.T, np.dot(D_s, B_s)) * detJ * weight  # 剪切部分
-        
+            
+            # 剪切部分
+            # 减缩积分点（中心点）
+            xi, eta = 0.0, 0.0
+            weight = 4.0  # 减缩积分的权重总和应为4（2×2高斯积分总权重也是4）
+    
+            # 计算形函数及其导数
+            N, dN_dxi, dN_deta = self._shape_functions(xi, eta)
+    
+            # 计算雅可比矩阵及其行列式
+            J = self._jacobian(dN_dxi, dN_deta)
+            detJ = np.linalg.det(J)
+    
+            # 计算形函数对x,y的导数
+            invJ = np.linalg.inv(J)
+            dN_dx = invJ[0,0]*dN_dxi + invJ[0,1]*dN_deta
+            dN_dy = invJ[1,0]*dN_dxi + invJ[1,1]*dN_deta
+    
+            # 计算剪切应变-位移矩阵
+            B_s = self._shear_strain_displacement_matrix(N, dN_dx, dN_dy)
+    
+            # 剪切部分刚度矩阵贡献
+            K += np.dot(B_s.T, np.dot(D_s, B_s)) * detJ * weight
+
         # 将刚度矩阵转换为上三角存储格式
         index = 0
         for j in range(12):
-            for i in range(j+1):
+            for i in range(j,-1,-1):
                 stiffness[index] = K[i, j]
                 index += 1
 
