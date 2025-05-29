@@ -76,6 +76,41 @@ def PlotDisp(Coords, disp, scale=1.0, out_dir="output"):
                 nn = [node.NodeNumber - 1 for node in nodes]
                 ax.plot(x, y, z, color='blue', linewidth=1)
                 ax.plot(x+Disp[nn, 0], y+Disp[nn, 1], z+Disp[nn, 2], color='red', linewidth=1)
+        elif element_type == 'H8':  # 假设 'H8' 是 ElementTypes 中的键名
+            # H8单元的边连接定义 (基于局部节点编号 0-7)
+            # 例如，一个常见的顺序：
+            # 底面: 0-1, 1-2, 2-3, 3-0
+            # 顶面: 4-5, 5-6, 6-7, 7-4
+            # 侧棱: 0-4, 1-5, 2-6, 3-7
+            edges = [
+                (0, 1), (1, 2), (2, 3), (3, 0),  # 底面
+                (4, 5), (5, 6), (6, 7), (7, 4),  # 顶面
+                (0, 4), (1, 5), (2, 6), (3, 7)  # 侧棱
+            ]
+            for i in range(NUME):
+                element = EleGrp[i]
+                nodes_obj = element._nodes  # 获取节点对象列表
+
+                # 提取所有节点的原始坐标和变形后坐标
+                original_coords_element = np.array([node.XYZ for node in nodes_obj])
+                node_indices_global = [node.NodeNumber - 1 for node in nodes_obj]  # 全局节点索引 (0-based)
+
+                # 获取这些节点的位移
+                disp_element_nodes = Disp[node_indices_global, :]
+                deformed_coords_element = original_coords_element + disp_element_nodes
+
+                for edge in edges:
+                    # 原始网格
+                    x_orig = [original_coords_element[edge[0]][0], original_coords_element[edge[1]][0]]
+                    y_orig = [original_coords_element[edge[0]][1], original_coords_element[edge[1]][1]]
+                    z_orig = [original_coords_element[edge[0]][2], original_coords_element[edge[1]][2]]
+                    ax.plot(x_orig, y_orig, z_orig, color='blue', linewidth=0.8)
+
+                    # 变形后网格
+                    x_def = [deformed_coords_element[edge[0]][0], deformed_coords_element[edge[1]][0]]
+                    y_def = [deformed_coords_element[edge[0]][1], deformed_coords_element[edge[1]][1]]
+                    z_def = [deformed_coords_element[edge[0]][2], deformed_coords_element[edge[1]][2]]
+                    ax.plot(x_def, y_def, z_def, color='red', linewidth=0.8)
 
     # 标签与图例
     ax.set_xlabel("X")
