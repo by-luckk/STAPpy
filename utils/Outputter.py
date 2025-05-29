@@ -151,6 +151,8 @@ class COutputter(object):
 				self.PrintBarElementData(EleGrp)
 			elif element_type == 'Q4':
 				self.PrintQ4ElementData(EleGrp)
+			elif element_type == 'H8':
+				self.PrintH8ElementData(EleGrp)
 				# pass  # comment or delete this line after implementation
     
 			else:
