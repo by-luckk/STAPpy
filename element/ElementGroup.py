@@ -16,6 +16,7 @@ import sys
 sys.path.append('../')
 from element.Bar import CBar
 from element.Q4 import CQ4
+from element.Plate import CPlate
 from element.Material import CBarMaterial, CQ4Material
 
 # dictionary: Define set of element types
@@ -93,9 +94,7 @@ class CElementGroup(object):
 			# ...
 			pass # comment or delete this line after implementation
 		elif element_type == 'Plate':
-			# implementation for other element types by yourself
-			# ...
-			pass # comment or delete this line after implementation
+			self._ElementList = [CPlate() for _ in range(amount)]
 		elif element_type == 'Shell':
 			# implementation for other element types by yourself
 			# ...
