@@ -44,7 +44,7 @@ An_Example_Of_Bar_Element # 标题行
 - NLCASE是**工况**的数量，一个dat文件可以定义多种工况，每个工况下各自施加一组载荷
 - 单元类型编号参考``element/ElementGroup.py``
 - bcode 1 表示约束，0表示自由
-- 定义载荷时，作用的自由度号012分别表示xyz。
+- 定义载荷时，作用的自由度号123分别表示xyz。
 
 ### Bar单元
 
