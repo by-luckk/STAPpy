@@ -15,7 +15,7 @@
 # test
 from utils.Singleton import Singleton
 from utils.Outputter import COutputter
-from element.Node import CNode
+from element.Node import CStandardNode, CBeamNode, CNode
 from LoadCaseData import CLoadCaseData
 from element.ElementGroup import CElementGroup
 from utils.SkylineMatrix import CSkylineMatrix
@@ -140,6 +140,27 @@ class Domain(object):
 			Output.OutputNodeInfo()
 		else:
 			return False
+		
+
+    # 检查是否有梁单元，如果有则将标准节点转换为梁节点
+    # 先读取一行判断是否有梁单元
+		current_pos = self.input_file.tell()
+		line = self.input_file.readline().split()
+		has_beam = any(int(line[0]) == 5 for _ in range(self.NUMEG)) if line else False
+		self.input_file.seek(current_pos)
+    
+		if has_beam:	
+			for i in range(len(self.NodeList)):
+				if isinstance(self.NodeList[i], CStandardNode):
+					beam_node = CBeamNode()
+					beam_node.NodeNumber = self.NodeList[i].NodeNumber
+					beam_node.XYZ = self.NodeList[i].XYZ.copy()
+					beam_node.bcode = np.zeros(6, dtype=np.int_)
+                # 复制原有的3个自由度
+					for d in range(3):
+						beam_node.bcode[d] = self.NodeList[i].bcode[d]
+					self.NodeList[i] = beam_node
+		
 
 		# Update equation number
 		self.CalculateEquationNumber()
@@ -150,7 +171,7 @@ class Domain(object):
 			Output.OutputLoadInfo()
 		else:
 			return False
-
+		
 		# Read element data
 		if self.ReadElements():
 			Output.OutputElementInfo()
@@ -158,14 +179,30 @@ class Domain(object):
 			return False
 
 		return True
-
 	def ReadNodalPoints(self):
-		""" Read nodal point data """
-		self.NodeList = [CNode() for _ in range(self.NUMNP)]
+		"""读取节点数据，根据单元类型创建不同类型的节点"""
+		self.NodeList = []
 
 		for np in range(self.NUMNP):
 			try:
-				self.NodeList[np].Read(self.input_file, np)
+                # 先创建基础节点
+				node = CNode()
+				node.Read(self.input_file, np)
+                
+                # 根据实际自由度创建最终节点
+				if node.NDF == 6:
+					beam_node = CBeamNode()
+					beam_node.NodeNumber = node.NodeNumber
+					beam_node.XYZ = node.XYZ.copy()
+					beam_node.bcode = node.bcode.copy()
+					self.NodeList.append(beam_node)
+				else:
+					std_node = CStandardNode()
+					std_node.NodeNumber = node.NodeNumber
+					std_node.XYZ = node.XYZ.copy()
+					std_node.bcode = node.bcode.copy()
+					self.NodeList.append(std_node)
+            
 			except ValueError as e:
 				print(e)
 				return False
@@ -180,7 +217,7 @@ class Domain(object):
 		self.NEQ = 0
 
 		for np in range(self.NUMNP):
-			for dof in range(CNode.NDF):
+			for dof in range(self.NodeList[np].NDF):
 				if self.NodeList[np].bcode[dof]:
 					self.NodeList[np].bcode[dof] = 0
 				else:

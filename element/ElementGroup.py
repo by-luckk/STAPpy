@@ -15,8 +15,13 @@
 import sys
 sys.path.append('../')
 from element.Bar import CBar
+from element.Material import CBarMaterial
+# Q4单元import
 from element.Q4 import CQ4
-from element.Material import CBarMaterial, CQ4Material
+from element.Material import CQ4Material
+#Beam import
+from element.Beam import CBeam
+from element.Material import CBeamMaterial
 
 # dictionary: Define set of element types
 ElementTypes = {0:'UNDEFINED',
@@ -80,6 +85,7 @@ class CElementGroup(object):
 			self._ElementList = [CBar() for _ in range(amount)]
 		elif element_type == 'Q4':
 			self._ElementList = [CQ4() for _ in range(amount)]
+			# pass # comment or delete this line after 
 		elif element_type == 'T3':
 			# implementation for other element types by yourself
 			# ...
@@ -89,14 +95,11 @@ class CElementGroup(object):
 			# ...
 			pass # comment or delete this line after implementation
 		elif element_type == 'Beam':
+			self._ElementList = [CBeam() for _ in range(amount)]
 			# implementation for other element types by yourself
 			# ...
 			pass # comment or delete this line after implementation
 		elif element_type == 'Plate':
-			# implementation for other element types by yourself
-			# ...
-			pass # comment or delete this line after implementation
-		elif element_type == 'Shell':
 			# implementation for other element types by yourself
 			# ...
 			pass # comment or delete this line after implementation
@@ -117,6 +120,10 @@ class CElementGroup(object):
 			self._MaterialList = [CBarMaterial() for _ in range(amount)]
 		elif element_type == 'Q4':
 			self._MaterialList = [CQ4Material() for _ in range(amount)]
+		elif element_type == 'Beam':
+			self._MaterialList = [CBeamMaterial() for _ in range(amount)]
+			# pass # comment or delete this line after implementation
+		
 		else:
 			error_info = "\nType {} not available. See CElementGroup." \
 						 "AllocateMaterials.".format(self._ElementType)
