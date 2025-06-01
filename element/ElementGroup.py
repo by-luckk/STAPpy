@@ -21,7 +21,10 @@ from element.Q4 import CQ4
 from element.Material import CQ4Material
 #Beam import
 from element.Beam import CBeam
-from element.Material import CBeamMaterial
+from element.H8 import CH8
+from element.Plate import CPlate
+from element.T3 import CT3
+from element.Material import CBarMaterial,CT3Material, CQ4Material, CH8Material, CPlateMaterial,CBeamMaterial
 
 # dictionary: Define set of element types
 ElementTypes = {0:'UNDEFINED',
@@ -87,19 +90,17 @@ class CElementGroup(object):
 			self._ElementList = [CQ4() for _ in range(amount)]
 			# pass # comment or delete this line after 
 		elif element_type == 'T3':
-			# implementation for other element types by yourself
-			# ...
-			pass # comment or delete this line after implementation
+			self._ElementList = [CT3() for _ in range(amount)]
 		elif element_type == 'H8':
-			# implementation for other element types by yourself
-			# ...
-			pass # comment or delete this line after implementation
+			self._ElementList = [CH8() for _ in range(amount)]
 		elif element_type == 'Beam':
 			self._ElementList = [CBeam() for _ in range(amount)]
 			# implementation for other element types by yourself
 			# ...
 			pass # comment or delete this line after implementation
 		elif element_type == 'Plate':
+			self._ElementList = [CPlate() for _ in range(amount)]
+		elif element_type == 'Shell':
 			# implementation for other element types by yourself
 			# ...
 			pass # comment or delete this line after implementation
@@ -120,10 +121,15 @@ class CElementGroup(object):
 			self._MaterialList = [CBarMaterial() for _ in range(amount)]
 		elif element_type == 'Q4':
 			self._MaterialList = [CQ4Material() for _ in range(amount)]
+		elif element_type == 'H8':
+			self._MaterialList = [CH8Material() for _ in range(amount)]
+		elif element_type == 'Plate':
+			self._MaterialList = [CPlateMaterial() for _ in range(amount)]
+		elif element_type == 'T3':
+			self._MaterialList = [CT3Material() for _ in range(amount)]
 		elif element_type == 'Beam':
 			self._MaterialList = [CBeamMaterial() for _ in range(amount)]
-			# pass # comment or delete this line after implementation
-		
+
 		else:
 			error_info = "\nType {} not available. See CElementGroup." \
 						 "AllocateMaterials.".format(self._ElementType)

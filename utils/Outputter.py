@@ -164,6 +164,10 @@ class COutputter(object):
 				# 			 "implemented.\n\n".format(ElementType)
 				# raise ValueError(error_info)
 				pass
+				# error_info = "\n*** Error *** Elment type {} has not been " \
+				# 			 "implemented.\n\n".format(ElementType)
+				# raise ValueError(error_info)
+				pass
 
 	def PrintBarElementData(self, EleGrp):
 		""" Output bar element data """
@@ -298,6 +302,7 @@ class COutputter(object):
 
 		print("\n", end='')
 		self._output_file.write("\n")
+
 	def PrintBeamElementData(self, EleGrp):
 		""" Output beam element data """
 		from Domain import Domain

@@ -70,6 +70,8 @@ class Domain(object):
 		# Global nodal force/displacement vector
 		self.Force = None
 
+		self.NodeNDF = 3
+
 		# Banded stiffness matrix
 		# A one-dimensional array storing only the elements below the
 		# skyline of the global stiffness matrix.
@@ -89,6 +91,9 @@ class Domain(object):
 
 	def GetNodeList(self):
 		return self.NodeList
+	
+	def GetNodeNDF(self):
+		return self.NodeNDF
 
 	def GetNUMEG(self):
 		return self.NUMEG
@@ -215,7 +220,6 @@ class Domain(object):
 		degree of freedom of each node
 		"""
 		self.NEQ = 0
-
 		for np in range(self.NUMNP):
 			for dof in range(self.NodeList[np].NDF):
 				if self.NodeList[np].bcode[dof]:
@@ -294,7 +298,6 @@ class Domain(object):
 
 			if dof:
 				self.Force[dof - 1] += LoadData.load[lnum]
-
 		return True
 
 	def AllocateMatrices(self):

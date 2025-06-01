@@ -1,4 +1,5 @@
 output/
+inp2dat/
 *.out
 
 # Byte-compiled / optimized / DLL files
