@@ -44,15 +44,9 @@ def PlotDisp(Coords, disp, scale=1.0, out_dir="output"):
     fig = plt.figure(figsize=(10, 8))
     ax = fig.add_subplot(111, projection='3d')
 
-    # 原始位置（蓝色）
-    ax.scatter(Coords[:, 0], Coords[:, 1], Coords[:, 2], c='blue', label='Original Position', s=10)
-
     # 标记节点编号
     for i, (x, y, z) in enumerate(Coords):
         ax.text(x, y, z, f'{i + 1}', color='black', fontsize=8)
-
-    # 移动后位置（红色）
-    ax.scatter(MovedCoords[:, 0], MovedCoords[:, 1], MovedCoords[:, 2], c='red', label='Deformed Position', s=10)
 
     # # 位移向量（箭头）
     # ax.quiver(
@@ -172,6 +166,7 @@ def PlotDisp(Coords, disp, scale=1.0, out_dir="output"):
 
 
         if element_type == 'Plate':
+            MovedCoords = []
             for i in range(NUME):
                 element = EleGrp[i]
                 nodes = element._nodes
@@ -193,6 +188,8 @@ def PlotDisp(Coords, disp, scale=1.0, out_dir="output"):
                 x_disp = x + 0.5 * thickness * (-theta_y) 
                 y_disp = y + 0.5 * thickness * theta_x
                 z_disp = z + w  # 只有z方向有位移
+
+                disp_single = np.column_stack((x_disp, y_disp, z_disp))
         
                 # 原始位置（蓝色）
                 x_closed = x + [x[0]]
@@ -283,6 +280,9 @@ def PlotDisp(Coords, disp, scale=1.0, out_dir="output"):
                        [y_bottom0, y_top0], 
                        [z_bottom0, z_top0], 
                        color='green', linewidth=0.5, alpha=0.7)
+                 
+                MovedCoords.append(disp_single)
+            MovedCoords = np.array(MovedCoords).reshape(-1, 3)
 
     # 绘制节点（在元素绘制完成后，确保节点可见）
     ax.scatter(Coords[:, 0], Coords[:, 1], Coords[:, 2], c='blue', label='Original Position', s=20, alpha=0.7)

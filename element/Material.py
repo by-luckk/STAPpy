@@ -17,21 +17,21 @@ import abc
 
 
 class CMaterial(metaclass=abc.ABCMeta):
-	"""
-		Material base class which only define one data member
-		All type of material classes should be derived from this base class
-	"""
-	def __init__(self):
-		self.nset = 0			# Number of set
-		self.E = 0				# Young's modulus
+    """
+        Material base class which only define one data member
+        All type of material classes should be derived from this base class
+    """
+    def __init__(self):
+        self.nset = 0			# Number of set
+        self.E = 0				# Young's modulus
 
-	@abc.abstractmethod
-	def Read(self, input_file, mset):
-		pass
+    @abc.abstractmethod
+    def Read(self, input_file, mset):
+        pass
 
-	@abc.abstractmethod
-	def Write(self, output_file):
-		pass
+    @abc.abstractmethod
+    def Write(self, output_file):
+        pass
 
 
 class CBarMaterial(CMaterial):
