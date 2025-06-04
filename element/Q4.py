@@ -81,7 +81,10 @@ class CQ4(CElement):
 
     def SizeOfStiffnessMatrix(self):
         # Q4单元刚度矩阵是8x8，上三角部分有36个元素
-        return 36
+        DOF = 0
+        for i in range(self._ND):
+            DOF = DOF + i + 1
+        return DOF
 
     def _shape_functions(self, xi, eta):
         """ 计算形函数及其导数 """
@@ -187,10 +190,10 @@ class CQ4(CElement):
             # 计算单元刚度矩阵贡献
             K += np.dot(B.T, np.dot(D, B)) * detJ * weight * t
         
-        # 将刚度矩阵转换为上三角存储格式
+        # 将刚度矩阵转换为上三角存储格式 # 已修改
         index = 0
         for j in range(8):
-            for i in range(j+1):
+            for i in range(j,-1,-1):
                 stiffness[index] = K[i, j]
                 index += 1
 
