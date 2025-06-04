@@ -29,22 +29,24 @@ def PlotDisp(Coords, disp, scale=1.0, out_dir="output"):
     # 位移量（确保为 numpy 数组）
     Disp = np.array(disp) * scale
 
+    if Disp.shape[1] > 3:
+        # 提取平动位移（前3个分量）
+        Disp_trans = Disp[:, :3]
+        
+    else:
+        Disp_trans = Disp
+
+    
     # 移动后的位置
-    MovedCoords = Coords + Disp
+    MovedCoords = Coords + Disp_trans
 
     # 绘图
     fig = plt.figure(figsize=(10, 8))
     ax = fig.add_subplot(111, projection='3d')
 
-    # 原始位置（蓝色）
-    ax.scatter(Coords[:, 0], Coords[:, 1], Coords[:, 2], c='blue', label='Original Position', s=10)
-
     # 标记节点编号
     for i, (x, y, z) in enumerate(Coords):
         ax.text(x, y, z, f'{i + 1}', color='black', fontsize=8)
-
-    # 移动后位置（红色）
-    ax.scatter(MovedCoords[:, 0], MovedCoords[:, 1], MovedCoords[:, 2], c='red', label='Deformed Position', s=10)
 
     # # 位移向量（箭头）
     # ax.quiver(
@@ -134,7 +136,37 @@ def PlotDisp(Coords, disp, scale=1.0, out_dir="output"):
                 z_disp_closed = np.append(z_disp, z_disp[0])
                 
                 ax.plot(x_disp_closed, y_disp_closed, z_disp_closed, color='red', linewidth=1)
+
+        if element_type in ['Beam', 'Frame']:
+            for i in range(NUME):
+                element = EleGrp[i]
+                nodes = element._nodes
+                nn = [node.NodeNumber - 1 for node in nodes]
+                
+                # 原始坐标
+                x_orig = [node.XYZ[0] for node in nodes]
+                y_orig = [node.XYZ[1] for node in nodes]
+                z_orig = [node.XYZ[2] for node in nodes]
+                
+                                # 提取平动位移（前3个分量）
+                if Disp.shape[1]> 3:
+                    disp_trans = Disp[nn, :3]
+                else:
+                    disp_trans = Disp[nn]
+                
+                # 变形后坐标
+                x_def = [x_orig[j] + disp_trans[j, 0] for j in range(len(x_orig))]
+                y_def = [y_orig[j] + disp_trans[j, 1] for j in range(len(y_orig))]
+                z_def = [z_orig[j] + disp_trans[j, 2] for j in range(len(z_orig))]
+                
+                # 绘制梁中心线
+                ax.plot(x_orig, y_orig, z_orig, color='blue', linewidth=1.5)
+                ax.plot(x_def, y_def, z_def, color='red', linewidth=1.5)
+                
+
+
         if element_type == 'Plate':
+            MovedCoords = []
             for i in range(NUME):
                 element = EleGrp[i]
                 nodes = element._nodes
@@ -156,6 +188,8 @@ def PlotDisp(Coords, disp, scale=1.0, out_dir="output"):
                 x_disp = x + 0.5 * thickness * (-theta_y) 
                 y_disp = y + 0.5 * thickness * theta_x
                 z_disp = z + w  # 只有z方向有位移
+
+                disp_single = np.column_stack((x_disp, y_disp, z_disp))
         
                 # 原始位置（蓝色）
                 x_closed = x + [x[0]]
@@ -246,8 +280,15 @@ def PlotDisp(Coords, disp, scale=1.0, out_dir="output"):
                        [y_bottom0, y_top0], 
                        [z_bottom0, z_top0], 
                        color='green', linewidth=0.5, alpha=0.7)
+                 
+                MovedCoords.append(disp_single)
+            MovedCoords = np.array(MovedCoords).reshape(-1, 3)
 
-                # 标记节点编号
+    # 绘制节点（在元素绘制完成后，确保节点可见）
+    ax.scatter(Coords[:, 0], Coords[:, 1], Coords[:, 2], c='blue', label='Original Position', s=20, alpha=0.7)
+    ax.scatter(MovedCoords[:, 0], MovedCoords[:, 1], MovedCoords[:, 2], c='red', label='Deformed Position', s=20)
+    
+    # 标记节点编号
     for i, (x, y, z) in enumerate(Coords):
         ax.text(x, y, z, f'{i + 1}', color='black', fontsize=8)
 

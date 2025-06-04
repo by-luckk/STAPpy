@@ -10,6 +10,8 @@
 
 ``utils/Plot.py``中，还需要检查网格的绘制是否对所有单元类型有效，理论上Q4应该可以，H8要重新画。
 
+``STAP.py``文件中的``Output.OutputNodalDisplacement``可以调节参数``vis_scale``，改变位移的放大比例。
+
 ## 输入文件示例 CBY
 
 ```txt

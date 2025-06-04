@@ -14,99 +14,113 @@
 """
 import numpy as np
 
-
 class CNode(object):
-	# Maximum number of degrees of freedom per node
-	# For 3D bar and solid elements, NDF = 3.
-	# For 3D beam or shell elements, NDF = 5 or 6
-	NDF = 3
+    # 基础类，包含所有节点共有的属性和方法
+    NDF = 3
 
-	def __init__(self, x=0.0, y=0.0, z=0.0):
-		super().__init__()
-		# x, y and z coordinates of the node
-		self.XYZ = np.zeros(CNode.NDF)
-		self.XYZ[0] = x; self.XYZ[1] = y; self.XYZ[2] = z
+    def __init__(self, dof_count=3):
+        # 设置自由度数量
+        self.NDF = dof_count
+        
+        # x, y 和 z 坐标
+        self.XYZ = np.zeros(3)
+        
+        # 边界条件代码数组
+        self.bcode = np.zeros(self.NDF, dtype=np.int_)
+        
+        # 节点编号
+        self.NodeNumber = 0
 
-		# Boundary code of each degree of freedom of the node
-		#     0: The corresponding degree of freedom is active
-		#     		(defined in the global system)
-		#     1: The corresponding degree of freedom in nonactive
-		#     		(not defined)
-		# After call Domain.CalculateEquationNumber(),
-		# bcode stores the global equation number
-		# corresponding to each degree of freedom of the node
-		self.bcode = np.zeros(CNode.NDF, dtype=np.int_)
+    def Read(self, input_file, check_np):
+        """读取节点数据，支持不同自由度的节点"""
+        line = input_file.readline().split()
+        
+        num_bc = len(line) - 4  # 总字段数减去节点号和三坐标
+        if num_bc == 3:
+            self.NDF = 3
+        elif num_bc == 6:
+            self.NDF = 6
+        else:
+            error_info = f"\n*** Error *** Invalid number of boundary conditions: {num_bc}"
+            raise ValueError(error_info)
+        
+        # 重新初始化边界条件数组
+        self.bcode = np.zeros(self.NDF, dtype=np.int_)
+        
+        N = int(line[0])
+        if N != check_np + 1:
+            error_info = "\n*** Error *** Nodes must be inputted in order !" \
+                         f"\n   Expected node number : {check_np+1}" \
+                         f"\n   Provided node number : {N}"
+            raise ValueError(error_info)
 
-		# Node numer
-		self.NodeNumber = 0
+        self.NodeNumber = N
 
-	def Read(self, input_file, check_np):
-		"""
-		Read element data from stream Input
-		"""
-		line = input_file.readline().split()
+        # 读取边界条件
+        for i in range(self.NDF):
+            self.bcode[i] = np.int_(line[i+1])
+            
+        # 读取坐标值
+        self.XYZ[0] = np.double(line[1+self.NDF])
+        self.XYZ[1] = np.double(line[2+self.NDF])
+        self.XYZ[2] = np.double(line[3+self.NDF])
 
-		N = int(line[0])
-		if N != check_np + 1:
-			error_info = "\n*** Error *** Nodes must be inputted in order !" \
-						 "\n   Expected node number : {}" \
-						 "\n   Provided node number : {}".format(check_np+1, N)
-			raise ValueError(error_info)
+    def Write(self, output_file):
+        """输出节点数据"""
+        node_info = f"{self.NodeNumber:9d}"
+        
+        # 输出边界条件代码
+        for bc in self.bcode:
+            node_info += f"{bc:5d}"
+            
+        # 输出坐标
+        node_info += f"{self.XYZ[0]:18.6e}{self.XYZ[1]:15.6e}{self.XYZ[2]:15.6e}\n"
+            
+        # 打印并写入文件
+        print(node_info, end='')
+        output_file.write(node_info)
 
-		self.NodeNumber = N
+    def WriteEquationNo(self, output_file):
+        """输出节点方程编号"""
+        equation_info = f"{self.NodeNumber:9d}       "
 
-		self.bcode[0] = np.int_(line[1])
-		self.bcode[1] = np.int_(line[2])
-		self.bcode[2] = np.int_(line[3])
-		self.XYZ[0] = np.double(line[4])
-		self.XYZ[1] = np.double(line[5])
-		self.XYZ[2] = np.double(line[6])
+        for dof in range(self.NDF):
+            equation_info += f"{self.bcode[dof]:5d}"
 
-	def Write(self, output_file):
-		"""
-		Output nodal point data to stream
-		"""
-		node_info = "%9d%5d%5d%5d%18.6e%15.6e%15.6e\n"%(
-			self.NodeNumber, self.bcode[0], self.bcode[1], self.bcode[2],
-			self.XYZ[0], self.XYZ[1], self.XYZ[2])
-		# print the nodal info on the screen
-		print(node_info, end='')
-		# write the nodal info to output file
-		output_file.write(node_info)
+        equation_info += '\n'
+        print(equation_info, end='')
+        output_file.write(equation_info)
 
-	def WriteEquationNo(self, output_file):
-		"""
-		Output equation numbers of nodal point to stream
-		"""
-		equation_info = "%9d       "%self.NodeNumber
+    def WriteNodalDisplacement(self, output_file, displacement):
+        """输出节点位移"""
+        displacement_info = f"{self.NodeNumber:5d}        "
+        displacement_list = []
+        
+        for dof in range(self.NDF):
+            if self.bcode[dof] == 0:
+                displacement_info += f"{0.0:18.6e}"
+                displacement_list.append(0.0)
+            else:
+                displacement_info += f"{displacement[self.bcode[dof] - 1]:18.6e}"
+                displacement_list.append(displacement[self.bcode[dof] - 1])
 
-		for dof in range(CNode.NDF):
-			equation_info += "%5d"%self.bcode[dof]
+        displacement_info += '\n'
+        print(displacement_info, end='')
+        output_file.write(displacement_info)
 
-		equation_info += '\n'
-		# print the nodal info on the screen
-		print(equation_info, end='')
-		# write the nodal info to output file
-		output_file.write(equation_info)
+        return displacement_list
 
-	def WriteNodalDisplacement(self, output_file, displacement):
-		"""
-		Write nodal displacement
-		"""
-		displacement_info = "%5d        "%self.NodeNumber
-		displacement_list = []
-		for dof in range(CNode.NDF):
-			if self.bcode[dof] == 0:
-				displacement_info += "%18.6e"%0.0
-				displacement_list.append(0.0)
-			else:
-				displacement_info += "%18.6e"%displacement[self.bcode[dof] - 1]
-				displacement_list.append(displacement[self.bcode[dof] - 1])
+class CStandardNode(CNode):
+    """标准节点类，用于杆单元等，3个自由度"""
+    def __init__(self, x=0.0, y=0.0, z=0.0):
+        super().__init__(dof_count=3)
+        self.XYZ[0] = x
+        self.XYZ[1] = y
+        self.XYZ[2] = z
 
-		displacement_info += '\n'
-		# print the nodal info on the screen
-		print(displacement_info, end='')
-		# write the nodal info to output file
-		output_file.write(displacement_info)
 
-		return displacement_list
+
+class CBeamNode(CNode):
+    """梁节点，具有6个自由度(3平移+3旋转)"""
+    def __init__(self):
+        super().__init__(dof_count=6)
