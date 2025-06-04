@@ -108,4 +108,19 @@ class CNode(object):
         print(displacement_info, end='')
         output_file.write(displacement_info)
 
-		return displacement_list
+        return displacement_list
+
+class CStandardNode(CNode):
+    """标准节点类，用于杆单元等，3个自由度"""
+    def __init__(self, x=0.0, y=0.0, z=0.0):
+        super().__init__(dof_count=3)
+        self.XYZ[0] = x
+        self.XYZ[1] = y
+        self.XYZ[2] = z
+
+
+
+class CBeamNode(CNode):
+    """梁节点，具有6个自由度(3平移+3旋转)"""
+    def __init__(self):
+        super().__init__(dof_count=6)
