@@ -16,6 +16,7 @@ import sys
 sys.path.append('../')
 import numpy as np
 from element.Element import CElement
+from element.Node import CBeamNode
 
 
 class CBeam(CElement):
@@ -28,9 +29,6 @@ class CBeam(CElement):
         # Each node has 6 DOFs (3 translations + 3 rotations)
         self._ND = 12  
         self._LocationMatrix = np.zeros(self._ND, dtype=np.int_)
-
-        # Box section properties: width, height, t1, t2, t3, t4
-        self._section = [2.0, 2.0, 0.1, 0.1, 0.1, 0.1]
 
     def Read(self, input_file, Ele, MaterialSets, NodeList):
         """
@@ -58,10 +56,6 @@ class CBeam(CElement):
         self._nodes[0] = NodeList[N1 - 1]
         self._nodes[1] = NodeList[N2 - 1]
 
-        # Read box section parameters if provided (optional)
-        if len(line) > 4:
-            self._section = [float(x) for x in line[4:10]]
-
     def Write(self, output_file, Ele):
         """
         Write element data to stream
@@ -70,14 +64,16 @@ class CBeam(CElement):
         :param Ele: the element number
         :return: None
         """
+        material = self._ElementMaterial  
         element_info = "%5d%11d%9d%12d%8.2f%8.2f%8.2f%8.2f%8.2f%8.2f\n"%(
             Ele+1, 
             self._nodes[0].NodeNumber,
             self._nodes[1].NodeNumber,
-            self._ElementMaterial.nset,
-            self._section[0], self._section[1],
-            self._section[2], self._section[3],
-            self._section[4], self._section[5]
+            material.nset,
+            material.width, material.height,
+            material.t1, material.t2,
+            material.t3, material.t4
+
         )
 
         # print the element info on the screen
@@ -115,11 +111,13 @@ class CBeam(CElement):
         for i in range(self.SizeOfStiffnessMatrix()):
             stiffness[i] = 0.0
 
-        # Get material and section properties
-        material = self._ElementMaterial
-        E = material.E
-        G = E / (2 * (1 + material.nu))
-        A, Iyy, Izz, J = material.calculate_section_properties()
+        # Get material properties
+        E = self._ElementMaterial.E
+        G = E / (2 * (1 + 0.3))  # Assume Poisson's ratio = 0.3
+
+        # Calculate section properties
+        A, Iyy, Izz, J = self._calculate_section_properties()
+
         # Calculate beam length and direction cosines
         DX = np.zeros(3)
         for i in range(3):
@@ -195,36 +193,49 @@ class CBeam(CElement):
         Klocal[8, 10] = 6*L*factor_z
         Klocal[10, 8] = 6*L*factor_z
 
-        # Transformation matrix from local to global coordinates
-        T = np.zeros((12, 12))
-        
-        # Rotation matrix for 3D beam
-        if abs(cx) > 0.9999:
-            # When beam is along x-axis
-            R = np.array([[cx, 0, 0],
-                          [0, cy, cz],
-                          [0, -cz, cy]])
-        else:
-            # General case
-            l = cx
-            m = cy
-            n = cz
-            l2 = l*l
-            m2 = m*m
-            n2 = n*n
-            lm = l*m
-            ln = l*n
-            mn = m*n
-            
-            R = np.array([[l, m, n],
-                          [-m/np.sqrt(l2 + m2), l/np.sqrt(l2 + m2), 0],
-                          [-l*n/np.sqrt(l2 + m2), -m*n/np.sqrt(l2 + m2), np.sqrt(l2 + m2)]])
 
-        # Fill transformation matrix
-        T[0:3, 0:3] = R
-        T[3:6, 3:6] = R
-        T[6:9, 6:9] = R
-        T[9:12, 9:12] = R
+# 计算梁长度和方向向量
+        DX = np.array([
+            self._nodes[1].XYZ[0] - self._nodes[0].XYZ[0],
+            self._nodes[1].XYZ[1] - self._nodes[0].XYZ[1],
+            self._nodes[1].XYZ[2] - self._nodes[0].XYZ[2]
+        ])
+        L = np.linalg.norm(DX)
+        v1 = DX / L  # 局部x轴
+
+# 参考向量（取全局Z轴）
+        v_ref = np.array([0, 0, 1])
+# 如果v1与v_ref几乎平行，则改用Y轴
+        if np.abs(np.dot(v1, v_ref)) > 0.999:
+            v_ref = np.array([0, 1, 0])
+
+# 计算局部z轴
+        v3 = np.cross(v1, v_ref)
+        v3_norm = np.linalg.norm(v3)
+        if v3_norm < 1e-10:
+    # 如果叉积结果很小，说明v1和v_ref几乎平行，换一个参考向量
+            v_ref = np.array([0, 1, 0])
+            v3 = np.cross(v1, v_ref)
+            v3_norm = np.linalg.norm(v3)
+            if v3_norm < 1e-10:
+                v_ref = np.array([1, 0, 0])
+            v3 = np.cross(v1, v_ref)
+            v3_norm = np.linalg.norm(v3)
+            if v3_norm < 1e-10:
+                raise ValueError("Cannot determine local coordinate system for beam element")
+        v3 = v3 / v3_norm
+
+# 计算局部y轴
+        v2 = np.cross(v3, v1)
+        v2 = v2 / np.linalg.norm(v2)
+
+# 旋转矩阵R（3x3）
+        R = np.array([v1, v2, v3])
+
+# 构建12x12的转换矩阵T
+        T = np.zeros((12, 12))
+        for i in range(0, 12, 3):
+            T[i:i+3, i:i+3] = R
 
         # Transform local stiffness to global coordinates
         Kglobal = np.dot(T.T, np.dot(Klocal, T))
@@ -232,59 +243,60 @@ class CBeam(CElement):
         # Store upper triangular part in stiffness array
         index = 0
         for j in range(12):
-            for i in range(j+1):
+            for i in range(j,-1,-1):
                 stiffness[index] = Kglobal[i, j]
                 index += 1
-    def ElementStress(self, stress, displacement):
-        """
-        Calculate element stress for B31 beam element
-        stress[0] - Axial stress (σ_axial)
-        stress[1] - Bending stress about y-axis (σ_bend_y)
-        stress[2] - Bending stress about z-axis (σ_bend_z)
-        stress[3] - Torsional shear stress (τ_torsion)
-        stress[4] - Shear stress due to Vy (τ_shear_y)
-        stress[5] - Shear stress due to Vz (τ_shear_z)
-        """
-        # Initialize stress array
-        for i in range(6):
-            stress[i] = 0.0
 
-        # Get material properties
-        E = self._ElementMaterial.E
-        G = E / (2 * (1 + 0.3))  # Assume Poisson's ratio = 0.3
+def ElementStress(self, stress, displacement):
+    """
+    Calculate element stress for B31 beam element
+    stress[0] - Axial stress (σ_axial)
+    stress[1] - Bending stress about y-axis (σ_bend_y)
+    stress[2] - Bending stress about z-axis (σ_bend_z)
+    stress[3] - Torsional shear stress (τ_torsion)
+    stress[4] - Shear stress due to Vy (τ_shear_y)
+    stress[5] - Shear stress due to Vz (τ_shear_z)
+    """
+    # Initialize stress array
+    for i in range(6):
+        stress[i] = 0.0
 
-        # Calculate section properties
-        b = self._section[0]  # width
-        h = self._section[1]  # height
-        t1 = self._section[2]  # top thickness
-        t2 = self._section[3]  # bottom thickness
-        t3 = self._section[4]  # left thickness
-        t4 = self._section[5]  # right thickness
+    # Get material properties
+    E = self._ElementMaterial.E
+    G = E / (2 * (1 + 0.3))  # Assume Poisson's ratio = 0.3
+
+    # Calculate section properties
+    b = self._section[0]  # width
+    h = self._section[1]  # height
+    t1 = self._section[2]  # top thickness
+    t2 = self._section[3]  # bottom thickness
+    t3 = self._section[4]  # left thickness
+    t4 = self._section[5]  # right thickness
     
-        # Area calculation
-        A = b*h - (b-t3-t4)*(h-t1-t2)
+    # Area calculation
+    A = b*h - (b-t3-t4)*(h-t1-t2)
     
-        # Moment of inertia calculations
-        Iyy = (b*h**3 - (b-t3-t4)*(h-t1-t2)**3)/12  # about y-axis
-        Izz = (h*b**3 - (h-t1-t2)*(b-t3-t4)**3)/12  # about z-axis
+    # Moment of inertia calculations
+    Iyy = (b*h**3 - (b-t3-t4)*(h-t1-t2)**3)/12  # about y-axis
+    Izz = (h*b**3 - (h-t1-t2)*(b-t3-t4)**3)/12  # about z-axis
     
     # Torsional constant approximation for thin-walled box
-        t_avg = (t1 + t2 + t3 + t4)/4
-        J = 2*(b-t_avg)*(h-t_avg)*t_avg
+    t_avg = (t1 + t2 + t3 + t4)/4
+    J = 2*(b-t_avg)*(h-t_avg)*t_avg
     
     # First moment of area for shear stress calculation
-        Qy = (b*h**2)/8 - ((b-t3-t4)*(h-t1-t2)**2)/8  # for shear in y-direction
-        Qz = (h*b**2)/8 - ((h-t1-t2)*(b-t3-t4)**2)/8  # for shear in z-direction
+    Qy = (b*h**2)/8 - ((b-t3-t4)*(h-t1-t2)**2)/8  # for shear in y-direction
+    Qz = (h*b**2)/8 - ((h-t1-t2)*(b-t3-t4)**2)/8  # for shear in z-direction
 
     # Calculate beam length and direction cosines
         DX = np.zeros(3)
         for i in range(3):
             DX[i] = self._nodes[1].XYZ[i] - self._nodes[0].XYZ[i]
 
-        L = np.sqrt(DX[0]**2 + DX[1]**2 + DX[2]**2)
-        cx = DX[0]/L
-        cy = DX[1]/L
-        cz = DX[2]/L
+    L = np.sqrt(DX[0]**2 + DX[1]**2 + DX[2]**2)
+    cx = DX[0]/L
+    cy = DX[1]/L
+    cz = DX[2]/L
 
     # Extract element displacements
         u = np.zeros(12)
@@ -293,24 +305,24 @@ class CBeam(CElement):
                 u[i] = displacement[self._LocationMatrix[i]-1]
 
     # Transformation matrix from global to local coordinates
-        if abs(cx) > 0.9999:
+    if abs(cx) > 0.9999:
         # When beam is along x-axis
-            R = np.array([[cx, 0, 0],
-                        [0, cy, cz],
-                        [0, -cz, cy]])
-        else:
+        R = np.array([[cx, 0, 0],
+                      [0, cy, cz],
+                      [0, -cz, cy]])
+    else:
         # General case
-            l = cx
-            m = cy
-            n = cz
-            l2 = l*l
-            m2 = m*m
-            n2 = n*n
-            lm = l*m
-            ln = l*n
-            mn = m*n
+        l = cx
+        m = cy
+        n = cz
+        l2 = l*l
+        m2 = m*m
+        n2 = n*n
+        lm = l*m
+        ln = l*n
+        mn = m*n
         
-            R = np.array([[l, m, n],
+        R = np.array([[l, m, n],
                       [-m/np.sqrt(l2 + m2), l/np.sqrt(l2 + m2), 0],
                       [-l*n/np.sqrt(l2 + m2), -m*n/np.sqrt(l2 + m2), np.sqrt(l2 + m2)]])
 
@@ -331,15 +343,15 @@ class CBeam(CElement):
     # M_z = (6*E*Izz/L^2) * (u_local[1] + u_local[7]) - (6*E*Izz/L^2) * (u_local[4] + u_local[10])
     
     # More accurate moment calculation using beam stiffness relations
-        M_y1 = (2*E*Iyy/L) * (2*u_local[5] + u_local[11] - (6/L)*(u_local[2] - u_local[8]))
-        M_y2 = (2*E*Iyy/L) * (u_local[5] + 2*u_local[11] - (6/L)*(u_local[2] - u_local[8]))
+    M_y1 = (2*E*Iyy/L) * (2*u_local[5] + u_local[11] - (6/L)*(u_local[2] - u_local[8]))
+    M_y2 = (2*E*Iyy/L) * (u_local[5] + 2*u_local[11] - (6/L)*(u_local[2] - u_local[8]))
     
-        M_z1 = (2*E*Izz/L) * (2*u_local[4] + u_local[10] + (6/L)*(u_local[1] - u_local[7]))
-        M_z2 = (2*E*Izz/L) * (u_local[4] + 2*u_local[10] + (6/L)*(u_local[1] - u_local[7]))
+    M_z1 = (2*E*Izz/L) * (2*u_local[4] + u_local[10] + (6/L)*(u_local[1] - u_local[7]))
+    M_z2 = (2*E*Izz/L) * (u_local[4] + 2*u_local[10] + (6/L)*(u_local[1] - u_local[7]))
     
     # Use average moment for stress calculation
-        M_y = (M_y1 + M_y2)/2
-        M_z = (M_z1 + M_z2)/2
+    M_y = (M_y1 + M_y2)/2
+    M_z = (M_z1 + M_z2)/2
     
     # Maximum bending stresses occur at extreme fibers (y=±h/2, z=±b/2)
         stress[1] = M_y * (h/2) / Iyy  # Bending stress about y-axis

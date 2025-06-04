@@ -36,7 +36,7 @@ class CSkylineMatrix(object):
 		# Store the stiffness matrkix in skyline storage
 		self._data = None
 
-		# Column hights
+		# Column
 		self._ColumnHeights = np.zeros(N, dtype=np.int_)
 
 		# Diagonal address of all columns in data_

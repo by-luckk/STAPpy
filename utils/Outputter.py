@@ -151,14 +151,17 @@ class COutputter(object):
 				self.PrintBarElementData(EleGrp)
 			elif element_type == 'Q4':
 				self.PrintQ4ElementData(EleGrp)
-			elif element_type == 'Beam':
-				self.PrintBeamElementData(EleGrp)
 				# pass  # comment or delete this line after implementation
     
 			else:
-				error_info = "\n*** Error *** Elment type {} has not been " \
-							 "implemented.\n\n".format(ElementType)
-				raise ValueError(error_info)
+				# error_info = "\n*** Error *** Elment type {} has not been " \
+				# 			 "implemented.\n\n".format(ElementType)
+				# raise ValueError(error_info)
+				pass
+				# error_info = "\n*** Error *** Elment type {} has not been " \
+				# 			 "implemented.\n\n".format(ElementType)
+				# raise ValueError(error_info)
+				pass
 
 	def PrintBarElementData(self, EleGrp):
 		""" Output bar element data """
@@ -183,6 +186,42 @@ class COutputter(object):
 		pre_info = "\n\n E L E M E N T   I N F O R M A T I O N\n" \
 				   " ELEMENT     NODE     NODE       MATERIAL\n" \
 				   " NUMBER-N      I        J       SET NUMBER\n"
+		print(pre_info, end="")
+		self._output_file.write(pre_info)
+
+		NUME = ElementGroup.GetNUME()
+		for Ele in range(NUME):
+			ElementGroup[Ele].Write(self._output_file, Ele)
+
+		print("\n", end="")
+		self._output_file.write("\n")
+
+	def PrintT3ElementData(self, EleGrp):
+		"""
+		Output T3 (CST) element data in a style parallel to PrintBarElementData.
+		"""
+		from Domain import Domain
+		FEMData = Domain()
+		ElementGroup = FEMData.GetEleGrpList()[EleGrp]
+		NUMMAT = ElementGroup.GetNUMMAT()
+
+		pre_info = (
+			" M A T E R I A L   D E F I N I T I O N\n\n"
+			" NUMBER OF DIFFERENT SETS OF MATERIAL\n"
+			" AND PLATE  CONSTANTS  . . . .( NPAR(3) ) . . =%5d\n\n"
+			"  SET       YOUNG'S      POISSON     THICKNESS\n"
+			" NUMBER     MODULUS        RATIO          t\n" % NUMMAT
+		)
+		print(pre_info, end="")
+		self._output_file.write(pre_info)
+
+		for mset in range(NUMMAT):
+			ElementGroup.GetMaterial(mset).Write(self._output_file)
+		pre_info = (
+			"\n\n E L E M E N T   I N F O R M A T I O N\n"
+			" ELEMENT     NODE     NODE     NODE     MATERIAL\n"
+			" NUMBER-N      I        J        K    SET NUMBER\n"
+		)
 		print(pre_info, end="")
 		self._output_file.write(pre_info)
 
@@ -226,41 +265,8 @@ class COutputter(object):
 
 		print("\n", end='')
 		self._output_file.write("\n")
-    
 
-	## 其他单元Print
-	def PrintBeamElementData(self, EleGrp):
-		""" Output Beam element data """
-		from Domain import Domain
-		FEMData = Domain()
-
-		ElementGroup = FEMData.GetEleGrpList()[EleGrp]
-		NUMMAT = ElementGroup.GetNUMMAT()
-
-		pre_info = " M A T E R I A L   D E F I N I T I O N\n\n" \
-				" NUMBER OF DIFFERENT SETS OF MATERIAL\n" \
-				" AND CROSS-SECTIONAL  CONSTANTS  . . . .( NPAR(3) ) . . =%5d\n\n" \
-				"  SET       YOUNG'S     POISSON'S     THICKNESS    PLANE\n" \
-				" NUMBER     MODULUS       RATIO                     STRESS\n" \
-				"               E            nu            t            (1/0)\n" % NUMMAT
-		print(pre_info, end='')
-		self._output_file.write(pre_info)
-
-		for mset in range(NUMMAT):
-			ElementGroup.GetMaterial(mset).Write(self._output_file)
-
-		pre_info = "\n\n E L E M E N T   I N F O R M A T I O N\n" \
-				" ELEMENT     NODE     NODE     NODE     NODE       MATERIAL\n" \
-				" NUMBER-N      I        J        K        L       SET NUMBER\n"
-		print(pre_info, end='')
-		self._output_file.write(pre_info)
-
-		NUME = ElementGroup.GetNUME()
-		for Ele in range(NUME):
-			ElementGroup[Ele].Write(self._output_file, Ele)
-
-		print("\n", end='')
-		self._output_file.write("\n")
+## 其他单元Print
 
 	def OutputLoadInfo(self):
 		""" Print load data """
@@ -284,7 +290,7 @@ class COutputter(object):
 			print("\n", end="")
 			self._output_file.write("\n")
 
-	def OutputNodalDisplacement(self, lcase, vis_scale=1.0):
+	def OutputNodalDisplacement(self, lcase, vis_scale=1):
 		""" Print nodal displacement *并生成位移可视化图* """
 		from Domain import Domain
 		FEMData = Domain()
@@ -305,7 +311,7 @@ class COutputter(object):
 			displacement_list = NodeList[n].WriteNodalDisplacement(self._output_file, displacement)
 
 			node_ids.append(n + 1)
-			disp.append(displacement_list)
+			disp.append(displacement_list)    
 
 		print("\n", end="")
 		self._output_file.write("\n")
@@ -349,14 +355,84 @@ class COutputter(object):
 					stress_info = "%5d%22.6e%18.6e\n"%(Ele+1, stress[0]*material.Area, stress[0])
 					print(stress_info, end="")
 					self._output_file.write(stress_info)
+			elif element_type == 'T3':
+				pass
 			elif element_type == 'Q4':
 				# implementation for other element types by yourself
 				# ...
 				pass  # comment or delete this line after implementation
+			elif element_type == 'H8':
+				pre_info = ("  ELEMENT      SIGMA_XX      SIGMA_YY      SIGMA_ZZ        TAU_XY        TAU_YZ        TAU_ZX\n"
+							"  NUMBER                  (Stresses at element center: xi=0, eta=0, zeta=0)\n")
+				print(pre_info, end="")
+				self._output_file.write(pre_info)
+
+				stress = np.zeros(6) # H8 element has 6 stress components [s_xx, s_yy, s_zz, t_xy, t_yz, t_zx]
+
+				for Ele in range(NUME):
+					Element = EleGrp[Ele]
+					Element.ElementStress(stress, displacement) # This calls CH8.ElementStress
+
+					stress_info = "%5d%14.6e%14.6e%14.6e%14.6e%14.6e%14.6e\n"%(
+						Ele+1, stress[0], stress[1], stress[2], stress[3], stress[4], stress[5])
+					print(stress_info, end="")
+					self._output_file.write(stress_info)
+			elif element_type == 'Beam':
+            # 保持原始输出标签不变
+				pre_info = (
+                "  ELEMENT      AXIAL       SHEAR-Y    SHEAR-Z    TORSION     MOMENT-Y    MOMENT-Z\n"
+                "  NUMBER       FORCE       FORCE      FORCE      MOMENT      MOMENT      MOMENT\n"
+                "               (N)         (N)        (N)        (N-m)       (N-m)       (N-m)\n"
+            	)
+				print(pre_info, end="")
+				self._output_file.write(pre_info)
+
+            # 创建临时数组存储应力值
+				stress = np.zeros(6)
+
+				for Ele in range(NUME):
+					Element = EleGrp[Ele]
+                # 调用修正后的应力计算方法
+					Element.ElementStress(stress, displacement)
+                
+                # 将应力值转换为内力值（保持原始输出格式）
+					material = Element.GetElementMaterial()
+					b = material.width
+					h = material.height
+					t1 = material.t1
+					t2 = material.t2
+					t3 = material.t3
+					t4 = material.t4
+                
+                # 计算截面属性（与Beam.py中一致）
+					A = b*h - (b-t3-t4)*(h-t1-t2)
+					Iyy = (b*h**3 - (b-t3-t4)*(h-t1-t2)**3)/12
+					Izz = (h*b**3 - (h-t1-t2)*(b-t3-t4)**3)/12
+                
+                # 将应力转换为内力（保持原始输出格式）
+					axial_force = stress[0] * A
+					shear_y_force = stress[4] * A  # 近似处理
+					shear_z_force = stress[5] * A  # 近似处理
+					torsion_moment = stress[3] * (Iyy + Izz)  # 近似处理
+					moment_y = stress[1] * Iyy / (h/2)
+					moment_z = stress[2] * Izz / (b/2)
+                
+					force_info = "%5d%12.4e%12.4e%12.4e%12.4e%12.4e%12.4e\n" % (
+					Ele+1, 
+                    axial_force,
+                    shear_y_force,
+                    shear_z_force,
+                    torsion_moment,
+                    moment_y,
+                    moment_z
+                	)
+					print(force_info, end="")
+					self._output_file.write(force_info)
 			else:
-				error_info = "\n*** Error *** Elment type {} has not been " \
-							 "implemented.\n\n".format(ElementType)
-				raise ValueError(error_info)
+				# error_info = "\n*** Error *** Elment type {} has not been " \
+				# 			 "implemented.\n\n".format(ElementType)
+				# raise ValueError(error_info)
+				pass
 
 	def OutputTotalSystemData(self):
 		""" Print total system data """
