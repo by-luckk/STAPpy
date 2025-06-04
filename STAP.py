@@ -78,6 +78,8 @@ if __name__ == "__main__":
 
 	Output = COutputter()
 
+	 
+
 	# Loop over for all load cases
 	for lcase in range(FEMData.GetNLCASE()):
 		# Assemble righ-hand-side vector (force vector)
@@ -106,3 +108,7 @@ if __name__ == "__main__":
 		time_solution - time_assemble, time_stress
 	)
 	Output.OutputSolutionTime(time_info)
+
+	
+
+	
