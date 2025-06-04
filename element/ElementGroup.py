@@ -18,13 +18,7 @@ from element.Bar import CBar
 from element.Material import CBarMaterial
 # Q4单元import
 from element.Q4 import CQ4
-from element.Material import CQ4Material
-#Beam import
-from element.Beam import CBeam
-from element.H8 import CH8
-from element.Plate import CPlate
-from element.T3 import CT3
-from element.Material import CBarMaterial,CT3Material, CQ4Material, CH8Material, CPlateMaterial,CBeamMaterial
+from element.Material import CBarMaterial, CQ4Material, CPlateMaterial
 
 # dictionary: Define set of element types
 ElementTypes = {0:'UNDEFINED',
@@ -121,15 +115,6 @@ class CElementGroup(object):
 			self._MaterialList = [CBarMaterial() for _ in range(amount)]
 		elif element_type == 'Q4':
 			self._MaterialList = [CQ4Material() for _ in range(amount)]
-		elif element_type == 'H8':
-			self._MaterialList = [CH8Material() for _ in range(amount)]
-		elif element_type == 'Plate':
-			self._MaterialList = [CPlateMaterial() for _ in range(amount)]
-		elif element_type == 'T3':
-			self._MaterialList = [CT3Material() for _ in range(amount)]
-		elif element_type == 'Beam':
-			self._MaterialList = [CBeamMaterial() for _ in range(amount)]
-
 		else:
 			error_info = "\nType {} not available. See CElementGroup." \
 						 "AllocateMaterials.".format(self._ElementType)
