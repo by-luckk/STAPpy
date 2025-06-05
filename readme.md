@@ -97,6 +97,9 @@ An_Example_Of_Bar_Element # 标题行
 ```txt
 element_id  node1_x node1_y  node2_x node2_y  node3_x node3_y  node4_x node4_y  material_set
 ```
+# 分片试验执行：
+patch_test_result = q4_element.PatchTest()
+self.assertTrue(patch_test_result, "Q4单元分片试验失败")
 
 ### H8单元 WXY
 

@@ -263,3 +263,56 @@ class CQ4(CElement):
         stress[0] = np.mean(stress_at_points[:, 0])  # σx
         stress[1] = np.mean(stress_at_points[:, 1])  # σy
         stress[2] = np.mean(stress_at_points[:, 2])  # τxy
+        
+    # 分片试验
+    def PatchTest(self):
+        """ 执行分片试验以验证单元在常应变状态下的正确性 """
+        # 1. 定义常应变状态
+        epsilon_x = 0.001  # x方向常应变
+        epsilon_y = 0.0005  # y方向常应变
+        gamma_xy = 0.0003  # xy方向常剪应变
+        
+        # 2. 计算理论应力
+        D = self._constitutive_matrix()
+        strain = np.array([epsilon_x, epsilon_y, gamma_xy])
+        theoretical_stress = np.dot(D, strain)
+        
+        # 3. 计算节点位移 (基于常应变状态)
+        disp = np.zeros(8)  # 8个自由度
+        for i in range(4):
+            x = self._nodes[i].XYZ[0]
+            y = self._nodes[i].XYZ[1]
+            
+            # 基于常应变计算位移
+            u = epsilon_x * x + gamma_xy/2 * y
+            v = epsilon_y * y + gamma_xy/2 * x
+            
+            disp[2*i] = u     # u位移
+            disp[2*i+1] = v   # v位移
+        
+        # 4. 计算单元应力
+        calculated_stress = np.zeros(3)
+        self.ElementStress(calculated_stress, disp)
+        
+        # 5. 比较理论应力与计算应力
+        tolerance = 1e-8  # 允许的误差范围
+        passed = True
+        
+        print("\nQ4单元分片试验结果:")
+        print("理论应力: σx={:.6e}, σy={:.6e}, τxy={:.6e}".format(
+            theoretical_stress[0], theoretical_stress[1], theoretical_stress[2]))
+        print("计算应力: σx={:.6e}, σy={:.6e}, τxy={:.6e}".format(
+            calculated_stress[0], calculated_stress[1], calculated_stress[2]))
+        
+        for i in range(3):
+            error = abs(theoretical_stress[i] - calculated_stress[i])
+            if error > tolerance:
+                passed = False
+                print(f"应力分量 {['σx','σy','τxy'][i]} 误差过大: {error:.2e} > {tolerance:.1e}")
+        
+        if passed:
+            print("分片试验通过: 单元能正确表示常应变状态")
+        else:
+            print("分片试验失败: 单元不能正确表示常应变状态")
+        
+        return passed
