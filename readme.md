@@ -95,8 +95,7 @@ An_Example_Of_Bar_Element # 标题行
 单元定义
 
 ```txt
-1 1 2 3 4 1  
-Q4单元: 单元号, 节点1, 节点2, 节点3, 节点4, 材料组号
+element_id  node1_x node1_y  node2_x node2_y  node3_x node3_y  node4_x node4_y  material_set
 ```
 
 ### H8单元 WXY

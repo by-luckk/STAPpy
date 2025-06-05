@@ -47,18 +47,42 @@ class CQ4(CElement):
                          "\n   Provided element : {}".format(Ele + 1, N)
             raise ValueError(error_info)
 
-        # 读取节点编号
-        N1 = int(line[1])
-        N2 = int(line[2])
-        N3 = int(line[3])
-        N4 = int(line[4])
-        MSet = int(line[5])
+        # # 读取节点编号 错误
+        # N1 = int(line[1])
+        # N2 = int(line[2])
+        # N3 = int(line[3])
+        # N4 = int(line[4])
+        # MSet = int(line[5])
         
+        # self._ElementMaterial = MaterialSets[MSet - 1]
+        # self._nodes[0] = NodeList[N1 - 1]
+        # self._nodes[1] = NodeList[N2 - 1]
+        # self._nodes[2] = NodeList[N3 - 1]
+        # self._nodes[3] = NodeList[N4 - 1]
+        
+        # 读取节点坐标 (4个节点，每个节点有x,y两个坐标)
+        coordinates = []
+        index = 1
+        for _ in range(4):
+            # 读取每个节点的x,y坐标
+            try:
+                x = float(line[index])
+                y = float(line[index + 1])
+            except ValueError:
+                raise ValueError(f"*** Error *** Invalid coordinate format for Q4 element {N}")
+            coordinates.append((x, y))
+            index += 2
+        
+        # 读取材料集
+        try:
+            MSet = int(line[index])
+        except ValueError:
+            raise ValueError(f"*** Error *** Invalid material set for Q4 element {N}")
+        
+        # 存储节点坐标和材料
         self._ElementMaterial = MaterialSets[MSet - 1]
-        self._nodes[0] = NodeList[N1 - 1]
-        self._nodes[1] = NodeList[N2 - 1]
-        self._nodes[2] = NodeList[N3 - 1]
-        self._nodes[3] = NodeList[N4 - 1]
+        for i, (x, y) in enumerate(coordinates):
+            self._nodes[i].coordinate2D = np.array([x, y], dtype=float)
 
     def Write(self, output_file, Ele):
         element_info = "%5d%11d%9d%9d%9d%12d\n" % (
