@@ -18,7 +18,7 @@ from solver.Solver import CSolver
 import numpy as np
 import sys
 #GPU needed
-import cupy as cp  # 添加CuPy库支持
+#import cupy as cp  # 添加CuPy库支持
 import time
 
 
@@ -51,7 +51,7 @@ class CLDLTSolver(CSolver):
         
     
 
-	def _cou_LDLT(self):
+	def _cpu_LDLT(self):
 		""" LDLT facterization (原有代码，使用CPU)"""
 		N = self.K.dim()
 		ColumnHeights = self.K.GetColumnHeights()
