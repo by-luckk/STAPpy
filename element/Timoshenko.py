@@ -127,6 +127,7 @@ class CBeam(CElement):
         Izz = (h*b**3 - (h-t1-t2)*(b-t3-t4)**3)/12
         t_avg = (t1 + t2 + t3 + t4)/4
         J = 2*(b-t_avg)*(h-t_avg)*t_avg
+        k = 5/6
 
         DX = np.zeros(3)
         for i in range(3):
@@ -140,6 +141,9 @@ class CBeam(CElement):
         cx = DX[0]/L
         cy = DX[1]/L
         cz = DX[2]/L
+
+        Φ_y = 12 * E * Iyy / (k * G * A * L2) 
+        Φ_z = 12 * E * Izz / (k * G * A * L2)
 
         
 
@@ -161,7 +165,8 @@ class CBeam(CElement):
         Klocal[9, 3] = -GJ_L
 
         # Bending stiffness about local y-axis
-        factor_y = E*Iyy/L3
+        ry = 1 / (1 + Φ_y)
+        factor_y = E*Iyy*ry/L3
         Klocal[1, 1] = 12*factor_y
         Klocal[7, 7] = 12*factor_y
         Klocal[1, 7] = -12*factor_y
@@ -183,7 +188,8 @@ class CBeam(CElement):
         Klocal[11, 7] = -6*L*factor_y
 
         # Bending stiffness about local z-axis
-        factor_z = E*Izz/L3
+        rz = 1 / (1 + Φ_z)
+        factor_z = E*Izz*rz/L3
         Klocal[2, 2] = 12*factor_z
         Klocal[8, 8] = 12*factor_z
         Klocal[2, 8] = -12*factor_z
