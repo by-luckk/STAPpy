@@ -176,7 +176,7 @@ def PlotDisp(Coords, disp, scale=1.0, out_dir="output"):
                 nn = [node.NodeNumber - 1 for node in nodes]
         
                 # 获取单元厚度（如果存在）
-                thickness = getattr(element._ElementMaterial, 'thickness', 0.1)  # 默认0.1
+                thickness = getattr(element._ElementMaterial, 'thickness', 0.01)  # 默认0.1
         
                 # 只考虑z方向的位移(w)和转角(θx, θy)
                 # Disp数组的结构应为: [w1, θx1, θy1, w2, θx2, θy2, ...]

@@ -18,8 +18,8 @@ from solver.Solver import CSolver
 import numpy as np
 import sys
 #GPU needed
-#import cupy as cp  # 添加CuPy库支持
-import time
+# import cupy as cp  # 添加CuPy库支持
+# import time
 
 
 class CLDLTSolver(CSolver):
@@ -29,6 +29,9 @@ class CLDLTSolver(CSolver):
 	"""
 	def __init__(self, K, use_gpu=False):
 		self.K = K			# Global Stiffness matrix in Skyline storage
+		if use_gpu == True:
+			import cupy as cp  # 添加CuPy库支持
+			import time
 		self.use_gpu = use_gpu 
 		self.gpu_init_time = 0  # GPU初始化时间
         
@@ -88,6 +91,8 @@ class CLDLTSolver(CSolver):
 
 	def _gpu_LDLT(self):
 		""" GPU加速的LDLT分解 """
+		import cupy as cp  # 添加CuPy库支持
+		import time
 		N = self.K.dim()
 		ColumnHeights = self.K.GetColumnHeights()
         
@@ -169,6 +174,8 @@ class CLDLTSolver(CSolver):
     
 	def _gpu_BackSubstitution(self, Force):
 		""" GPU加速的后向替换 """
+		import cupy as cp  # 添加CuPy库支持
+		import time
 		N = self.K.dim()
 		ColumnHeights = self.K.GetColumnHeights()
         
