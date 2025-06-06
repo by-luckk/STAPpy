@@ -54,7 +54,7 @@ class CLDLTSolver(CSolver):
         
     
 
-	def _cou_LDLT(self):
+	def _cpu_LDLT(self):
 		""" LDLT facterization (原有代码，使用CPU)"""
 		N = self.K.dim()
 		ColumnHeights = self.K.GetColumnHeights()

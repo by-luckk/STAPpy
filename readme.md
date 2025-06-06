@@ -128,7 +128,7 @@ self.assertTrue(patch_test_result, "Q4单元分片试验失败")
 LDLT分解的复杂度O(n^3)适合GPU加速，可以明显提升求解速度
 但 内存需求 = CPU内存 + GPU显存，需要更高的内存空间
 
-use-gpu = True时开启加速，默认为False，需要手动开启！
+use_gpu = True时开启加速，默认为False，需要手动开启！
 ```txt
 pip install cupy-cuda11x  #（根据CUDA版本选择）仅支持NVIDIA CUDA生态
 ```
