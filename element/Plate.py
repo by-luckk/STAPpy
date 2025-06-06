@@ -228,6 +228,8 @@ class CPlate(CElement):
         index = 0
         for j in range(12):
             for i in range(j,-1,-1):
+
+                
                 stiffness[index] = K[i, j]
                 index += 1
 
