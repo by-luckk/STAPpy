@@ -95,7 +95,9 @@ An_Example_Of_Bar_Element # 标题行
 ```txt
 element_id  node1_x node1_y  node2_x node2_y  node3_x node3_y  node4_x node4_y  material_set
 ```
-# 分片试验执行：
+
+#### 分片试验执行
+
 patch_test_result = q4_element.PatchTest()
 self.assertTrue(patch_test_result, "Q4单元分片试验失败")
 
@@ -123,6 +125,7 @@ self.assertTrue(patch_test_result, "Q4单元分片试验失败")
     * 确保 `CH8Material` 提供 `CH8` 单元所需的 `E` 和 `nu`。
     * 确保节点对象提供 `XYZ` 坐标和 `bcode` 边界条件。
 
+<<<<<<< HEAD
 ### Plate单元 WXY
 
 1.  **输入格式**:
@@ -145,3 +148,30 @@ self.assertTrue(patch_test_result, "Q4单元分片试验失败")
 6.  **代码兼容性**:
     * 确保 `CPlateMaterial` 提供 `CPlate` 单元所需的 弹性模量、泊松比、厚度和修正系数。
     * 确保节点对象提供 `XYZ` 坐标和 `bcode` 边界条件。
+=======
+### GPU加速 KG
+
+LDLT分解的复杂度O(n^3)适合GPU加速，可以明显提升求解速度
+但 内存需求 = CPU内存 + GPU显存，需要更高的内存空间
+
+use-gpu = True时开启加速，默认为False，需要手动开启！
+```txt
+pip install cupy-cuda11x  #（根据CUDA版本选择）仅支持NVIDIA CUDA生态
+```
+启用GPU加速：
+```python
+solver = CLDLTSolver(stiffness_matrix, use_gpu=True)
+```
+
+### Beam单元 SJM
+
+自由度说明
+```txt
+1   1 1 1 1 1 1 （梁单元有6个自由度）  0.0     0.0     0.0
+```
+
+材料说明
+```txt
+1   2.1e11  0.3   20.0 30.0 2.0 2.0 2.0 2.0(箱型截面，分别为)
+```
+>>>>>>> 7c5639b8e67baead57c842566cfe9d2974767252
