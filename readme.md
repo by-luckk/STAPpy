@@ -123,6 +123,20 @@ self.assertTrue(patch_test_result, "Q4单元分片试验失败")
     * 确保 `CH8Material` 提供 `CH8` 单元所需的 `E` 和 `nu`。
     * 确保节点对象提供 `XYZ` 坐标和 `bcode` 边界条件。
 
+### GPU加速 KG
+
+LDLT分解的复杂度O(n^3)适合GPU加速，可以明显提升求解速度
+但 内存需求 = CPU内存 + GPU显存，需要更高的内存空间
+
+use-gpu = True时开启加速，默认为False，需要手动开启！
+```txt
+pip install cupy-cuda11x  #（根据CUDA版本选择）仅支持NVIDIA CUDA生态
+```
+启用GPU加速：
+```python
+solver = CLDLTSolver(stiffness_matrix, use_gpu=True)
+```
+
 
 ### Beam单元 SJM
 
