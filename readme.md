@@ -95,7 +95,9 @@ An_Example_Of_Bar_Element # 标题行
 ```txt
 element_id  node1_x node1_y  node2_x node2_y  node3_x node3_y  node4_x node4_y  material_set
 ```
-# 分片试验执行：
+
+#### 分片试验执行
+
 patch_test_result = q4_element.PatchTest()
 self.assertTrue(patch_test_result, "Q4单元分片试验失败")
 
@@ -137,14 +139,14 @@ pip install cupy-cuda11x  #（根据CUDA版本选择）仅支持NVIDIA CUDA生�
 solver = CLDLTSolver(stiffness_matrix, use_gpu=True)
 ```
 
-
 ### Beam单元 SJM
 
 自由度说明
 ```txt
 1   1 1 1 1 1 1 （梁单元有6个自由度）  0.0     0.0     0.0
+```
 
 材料说明
 ```txt
 1   2.1e11  0.3   20.0 30.0 2.0 2.0 2.0 2.0(箱型截面，分别为)
-
+```
