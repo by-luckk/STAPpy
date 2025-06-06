@@ -91,6 +91,8 @@ class CLDLTSolver(CSolver):
 
 	def _gpu_LDLT(self):
 		""" GPU加速的LDLT分解 """
+		import cupy as cp  # 添加CuPy库支持
+		import time
 		N = self.K.dim()
 		ColumnHeights = self.K.GetColumnHeights()
         
@@ -172,6 +174,8 @@ class CLDLTSolver(CSolver):
     
 	def _gpu_BackSubstitution(self, Force):
 		""" GPU加速的后向替换 """
+		import cupy as cp  # 添加CuPy库支持
+		import time
 		N = self.K.dim()
 		ColumnHeights = self.K.GetColumnHeights()
         
