@@ -2,6 +2,12 @@
 
 这是我们的有限元小组作业，小组成员：陈博远、汪小杨、石嘉木、郭锐冰、苏耘希。
 
+# Q4单元 已添加
+! 材料定义
+1 2.1e5 0.3 1.0 1  ! Q4材料: 组号, E, nu, 厚度, plane_stress(1=是,0=否)
+
+! 单元定义
+1 1 1 2 2 3 3 4 4 1  ! Q4单元: 单元号, 节点1(x,y), 节点2(x,y), 节点3(x,y), 节点4(x,y), 材料组号
 ## 更新说明
 
 ### 可视化 CBY
@@ -87,9 +93,11 @@ An_Example_Of_Bar_Element # 标题行
 单元定义
 
 ```txt
-1 1 2 3 4 1  
-Q4单元: 单元号, 节点1, 节点2, 节点3, 节点4, 材料组号
+element_id  node1_x node1_y  node2_x node2_y  node3_x node3_y  node4_x node4_y  material_set
 ```
+# 分片试验执行：
+patch_test_result = q4_element.PatchTest()
+self.assertTrue(patch_test_result, "Q4单元分片试验失败")
 
 ### H8单元 WXY
 
@@ -125,3 +133,4 @@ Q4单元: 单元号, 节点1, 节点2, 节点3, 节点4, 材料组号
 材料说明
 ```txt
 1   2.1e11  0.3   20.0 30.0 2.0 2.0 2.0 2.0(箱型截面，分别为)
+

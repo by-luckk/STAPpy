@@ -272,3 +272,5 @@ class CPlate(CElement):
         stress[0] = np.mean(stress_at_points[:, 0])  # Mx
         stress[1] = np.mean(stress_at_points[:, 1])  # My
         stress[2] = np.mean(stress_at_points[:, 2])  # Mxy
+
+    

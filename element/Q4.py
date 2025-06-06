@@ -47,18 +47,42 @@ class CQ4(CElement):
                          "\n   Provided element : {}".format(Ele + 1, N)
             raise ValueError(error_info)
 
-        # 读取节点编号
-        N1 = int(line[1])
-        N2 = int(line[2])
-        N3 = int(line[3])
-        N4 = int(line[4])
-        MSet = int(line[5])
+        # # 读取节点编号 错误
+        # N1 = int(line[1])
+        # N2 = int(line[2])
+        # N3 = int(line[3])
+        # N4 = int(line[4])
+        # MSet = int(line[5])
         
+        # self._ElementMaterial = MaterialSets[MSet - 1]
+        # self._nodes[0] = NodeList[N1 - 1]
+        # self._nodes[1] = NodeList[N2 - 1]
+        # self._nodes[2] = NodeList[N3 - 1]
+        # self._nodes[3] = NodeList[N4 - 1]
+        
+        # 读取节点坐标 (4个节点，每个节点有x,y两个坐标)
+        coordinates = []
+        index = 1
+        for _ in range(4):
+            # 读取每个节点的x,y坐标
+            try:
+                x = float(line[index])
+                y = float(line[index + 1])
+            except ValueError:
+                raise ValueError(f"*** Error *** Invalid coordinate format for Q4 element {N}")
+            coordinates.append((x, y))
+            index += 2
+        
+        # 读取材料集
+        try:
+            MSet = int(line[index])
+        except ValueError:
+            raise ValueError(f"*** Error *** Invalid material set for Q4 element {N}")
+        
+        # 存储节点坐标和材料
         self._ElementMaterial = MaterialSets[MSet - 1]
-        self._nodes[0] = NodeList[N1 - 1]
-        self._nodes[1] = NodeList[N2 - 1]
-        self._nodes[2] = NodeList[N3 - 1]
-        self._nodes[3] = NodeList[N4 - 1]
+        for i, (x, y) in enumerate(coordinates):
+            self._nodes[i].coordinate2D = np.array([x, y], dtype=float)
 
     def Write(self, output_file, Ele):
         element_info = "%5d%11d%9d%9d%9d%12d\n" % (
@@ -81,7 +105,10 @@ class CQ4(CElement):
 
     def SizeOfStiffnessMatrix(self):
         # Q4单元刚度矩阵是8x8，上三角部分有36个元素
-        return 36
+        DOF = 0
+        for i in range(self._ND):
+            DOF = DOF + i + 1
+        return DOF
 
     def _shape_functions(self, xi, eta):
         """ 计算形函数及其导数 """
@@ -187,10 +214,10 @@ class CQ4(CElement):
             # 计算单元刚度矩阵贡献
             K += np.dot(B.T, np.dot(D, B)) * detJ * weight * t
         
-        # 将刚度矩阵转换为上三角存储格式
+        # 将刚度矩阵转换为上三角存储格式 # 已修改
         index = 0
         for j in range(8):
-            for i in range(j+1):
+            for i in range(j,-1,-1):
                 stiffness[index] = K[i, j]
                 index += 1
 
@@ -236,3 +263,56 @@ class CQ4(CElement):
         stress[0] = np.mean(stress_at_points[:, 0])  # σx
         stress[1] = np.mean(stress_at_points[:, 1])  # σy
         stress[2] = np.mean(stress_at_points[:, 2])  # τxy
+        
+    # 分片试验
+    def PatchTest(self):
+        """ 执行分片试验以验证单元在常应变状态下的正确性 """
+        # 1. 定义常应变状态
+        epsilon_x = 0.001  # x方向常应变
+        epsilon_y = 0.0005  # y方向常应变
+        gamma_xy = 0.0003  # xy方向常剪应变
+        
+        # 2. 计算理论应力
+        D = self._constitutive_matrix()
+        strain = np.array([epsilon_x, epsilon_y, gamma_xy])
+        theoretical_stress = np.dot(D, strain)
+        
+        # 3. 计算节点位移 (基于常应变状态)
+        disp = np.zeros(8)  # 8个自由度
+        for i in range(4):
+            x = self._nodes[i].XYZ[0]
+            y = self._nodes[i].XYZ[1]
+            
+            # 基于常应变计算位移
+            u = epsilon_x * x + gamma_xy/2 * y
+            v = epsilon_y * y + gamma_xy/2 * x
+            
+            disp[2*i] = u     # u位移
+            disp[2*i+1] = v   # v位移
+        
+        # 4. 计算单元应力
+        calculated_stress = np.zeros(3)
+        self.ElementStress(calculated_stress, disp)
+        
+        # 5. 比较理论应力与计算应力
+        tolerance = 1e-8  # 允许的误差范围
+        passed = True
+        
+        print("\nQ4单元分片试验结果:")
+        print("理论应力: σx={:.6e}, σy={:.6e}, τxy={:.6e}".format(
+            theoretical_stress[0], theoretical_stress[1], theoretical_stress[2]))
+        print("计算应力: σx={:.6e}, σy={:.6e}, τxy={:.6e}".format(
+            calculated_stress[0], calculated_stress[1], calculated_stress[2]))
+        
+        for i in range(3):
+            error = abs(theoretical_stress[i] - calculated_stress[i])
+            if error > tolerance:
+                passed = False
+                print(f"应力分量 {['σx','σy','τxy'][i]} 误差过大: {error:.2e} > {tolerance:.1e}")
+        
+        if passed:
+            print("分片试验通过: 单元能正确表示常应变状态")
+        else:
+            print("分片试验失败: 单元不能正确表示常应变状态")
+        
+        return passed
