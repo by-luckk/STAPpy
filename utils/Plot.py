@@ -27,18 +27,9 @@ def PlotDisp(Coords, disp, scale=1.0, out_dir="output"):
     os.makedirs(out_dir, exist_ok=True)
 
     # 位移量（确保为 numpy 数组）
-    Disp = np.array(disp) * scale
-
-    if Disp.shape[1] > 3:
-        # 提取平动位移（前3个分量）
-        Disp_trans = Disp[:, :3]
-        
-    else:
-        Disp_trans = Disp
-
-    
-    # 移动后的位置
-    MovedCoords = Coords + Disp_trans
+    disp_fixed = [row[:3] + [0.0] * (3 - len(row[:3])) for row in disp]
+    Disp = np.array(disp_fixed) * scale
+    MovedCoords = Coords + Disp
 
     # 绘图
     fig = plt.figure(figsize=(10, 8))
@@ -180,9 +171,9 @@ def PlotDisp(Coords, disp, scale=1.0, out_dir="output"):
         
                 # 只考虑z方向的位移(w)和转角(θx, θy)
                 # Disp数组的结构应为: [w1, θx1, θy1, w2, θx2, θy2, ...]
-                w = Disp[nn, 0]  # 挠度
-                theta_x = Disp[nn, 1]  # 绕x轴转角
-                theta_y = Disp[nn, 2]  # 绕y轴转角
+                w = np.array([disp[n][-3] for n in nn])
+                theta_x = np.array([disp[n][-2] for n in nn])
+                theta_y = np.array([disp[n][-1] for n in nn])
         
                 # 变形后位置 - 只有z坐标变化
                 x_disp = x + 0.5 * thickness * (-theta_y) 

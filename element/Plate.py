@@ -75,7 +75,12 @@ class CPlate(CElement):
     def GenerateLocationMatrix(self):
         i = 0
         for N in range(self._NEN):
-            for D in range(3):  # 板单元每个节点有3个自由度(w,θx,θy)
+            dof = self._nodes[N].NDF
+            if dof == 3:
+                begin = 0
+            else:
+                begin = 2
+            for D in range(begin, begin+3):  # 板单元每个节点有3个自由度(w,θx,θy)
                 self._LocationMatrix[i] = self._nodes[N].bcode[D]
                 i += 1
 

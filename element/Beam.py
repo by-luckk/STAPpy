@@ -16,8 +16,6 @@ import sys
 sys.path.append('../')
 import numpy as np
 from element.Element import CElement
-from element.Node import CBeamNode
-
 
 class CBeam(CElement):
     """ B31 Beam Element class """
