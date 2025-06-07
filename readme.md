@@ -76,7 +76,7 @@ An_Example_Of_Bar_Element # 标题行
 1 1 2 3 1 #  单元号, 节点1, 节点2, 节点3，材料组号
 ```
 
-### Q4单元 已添加 KG
+### Q4单元 已添加 GRB
 
 材料定义
 
@@ -143,7 +143,7 @@ self.assertTrue(patch_test_result, "Q4单元分片试验失败")
     * 确保 `CPlateMaterial` 提供 `CPlate` 单元所需的 弹性模量、泊松比、厚度和修正系数。
     * 确保节点对象提供 `XYZ` 坐标和 `bcode` 边界条件。
 =======
-### GPU加速 KG
+### GPU加速 GRB
 
 LDLT分解的复杂度O(n^3)适合GPU加速，可以明显提升求解速度
 但 内存需求 = CPU内存 + GPU显存，需要更高的内存空间
