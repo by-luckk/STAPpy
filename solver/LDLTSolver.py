@@ -91,6 +91,7 @@ class CLDLTSolver(CSolver):
 
 	def _gpu_LDLT(self):
 		""" GPU加速的LDLT分解 """
+		print("using gpu...")
 		import cupy as cp  # 添加CuPy库支持
 		import time
 		N = self.K.dim()
