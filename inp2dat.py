@@ -212,7 +212,13 @@ def parse_inp_to_dat(inp_filepath, dat_filepath):
 
             geom_line = lines[i].strip()
             i += 1
-            geom_props_val = [float(p.strip()) for p in geom_line.split(",") if p.strip()]
+            geom_props_raw = [float(p.strip()) for p in geom_line.split(",") if p.strip()]
+            # 如果是 BOX，而用户只写了 4 个参数(b, d, tf, tw)，补 2 个壁厚 = tw
+            if section_type_str == "BOX" and len(geom_props_raw) == 4:
+                b, d, tf, tw = geom_props_raw
+                geom_props_val = [b, d, tf, tf, tw, tw]          # 按 “顶/底/左/右” 厚度补全
+            else:
+                geom_props_val = geom_props_raw  # 原样保存(常见 6 参数)
 
             orientation_props_val = None
             if i < len(lines) and not lines[i].strip().startswith("*") and lines[i].strip():
@@ -578,12 +584,15 @@ def parse_inp_to_dat(inp_filepath, dat_filepath):
                     mat_line_parts_list.extend([f"{p_val:.7e}" for p_val in section_props_out])
                 else:
                     mat_line_parts_list.extend(["0.0"] * 6)  # BOX截面有6个参数
+            elif dat_elem_type_id_out == 6:
+                thickness_val = section_props_out[0] if section_props_out else 1.0
+                mat_line_parts_list.append(f"{thickness_val:.7e}")   # 只要厚度即可
 
             f_out.write(" ".join(mat_line_parts_list) + "\n")
 
-            for elem_data_out in group_elements_list:
+            for local_idx, elem_data_out in enumerate(group_elements_list, start=1):
                 elem_nodes_str_out = " ".join(map(str, elem_data_out["nodes"]))
-                f_out.write(f"{elem_data_out['id']} {elem_nodes_str_out} {1}\n")
+                f_out.write(f"{local_idx} {elem_nodes_str_out} 1\n")
 
     print(f"完成 DAT 文件生成: {dat_filepath}")
 

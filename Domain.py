@@ -259,7 +259,6 @@ class Domain(object):
 
 			for Ele in range(NUME):
 				Element = ElementGrp[Ele]
-
 				Element.GenerateLocationMatrix()
 
 				self.StiffnessMatrix.CalculateColumnHeight(
