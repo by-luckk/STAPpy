@@ -27,7 +27,7 @@ class CLDLTSolver(CSolver):
 	LDLT solver: A in core solver using skyline storage
 	and column reduction scheme
 	"""
-	def __init__(self, K, use_gpu=False):
+	def __init__(self, K, use_gpu=True):
 		self.K = K			# Global Stiffness matrix in Skyline storage
 		if use_gpu == True:
 			import cupy as cp  # 添加CuPy库支持
@@ -36,12 +36,16 @@ class CLDLTSolver(CSolver):
 		self.gpu_init_time = 0  # GPU初始化时间
         
 	def _to_gpu(self,array):
+		import cupy as cp
+		import time
 		start = time.time()
 		gpu_array = cp.asarray(array)
 		self.gpu_init_time += time.time() - start
 		return gpu_array
 
 	def _to_cpu(self, gpu_array):
+		import cupy as cp
+		import time
 		"""将数据移回CPU"""
 		return cp.asnumpy(gpu_array)
 
