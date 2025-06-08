@@ -30,8 +30,8 @@ class CLDLTSolver(CSolver):
 	def __init__(self, K, use_gpu=True):
 		self.K = K			# Global Stiffness matrix in Skyline storage
 		if use_gpu == True:
-			import cupy as cp  # 添加CuPy库支持
 			import time
+			import torch
 		self.use_gpu = use_gpu 
 		self.gpu_init_time = 0  # GPU初始化时间
         

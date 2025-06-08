@@ -1,6 +1,6 @@
 import math
 import re
-
+import numpy as np
 
 # 3D 旋转辅助函数 (罗德里格旋转公式)
 def rotate_point(p, angle_deg, axis_p1, axis_p2):
@@ -510,7 +510,6 @@ def parse_inp_to_dat(inp_filepath, dat_filepath):
     # --- 准备 DAT 输出 ---
     print("准备 DAT 输出...")
     dat_title_str = inp_data["heading"]
-    numnp_val = len(global_nodes_coords_bcs)
 
     dat_element_groups_dict = {}
     for elem_iter in global_elements_data:
@@ -527,21 +526,65 @@ def parse_inp_to_dat(inp_filepath, dat_filepath):
 
     abaqus_to_dat_type_map_dict = {'T3D2': 1, 'S4R': 6, 'C3D8R': 4, 'B31': 5}
 
-    processed_material_keys_to_dat_id_map = {}
-    next_dat_material_id_val = 1
+    # find duplicated nodes
+    old_to_new_id = {}
+    new_global_nodes_coords_bcs = {}
+    coords_seen = {}
+    new_id = 1
+    intersections = {}
+
+    sorted_global_node_ids_list = sorted(global_nodes_coords_bcs.keys())
+    for gn_id_out in sorted_global_node_ids_list:
+        node_info_out = global_nodes_coords_bcs[gn_id_out]
+        coords_out = tuple(node_info_out["coords"])
+        # let coordinates with extremely small numbers be considered as zero
+        coords_out = tuple(round(coord, 7) for coord in coords_out)  # 保留7位小数
+        if coords_out not in coords_seen:
+            coords_seen[coords_out] = new_id
+            new_global_nodes_coords_bcs[new_id] = node_info_out
+            old_to_new_id[gn_id_out] = new_id
+            new_id += 1
+        else:
+            old_bcode = new_global_nodes_coords_bcs[coords_seen[coords_out]]["bcode"]
+            new_bcode = node_info_out["bcode"]
+            node_info_out["bcode"] = [max(old_bcode[i], new_bcode[i]) for i in range(3)]
+            print(f"  更新: 节点 {gn_id_out} 重复，更新为 {coords_seen[coords_out]}")
+            old_to_new_id[gn_id_out] = coords_seen[coords_out]
+    numnp_val = len(new_global_nodes_coords_bcs)
+
+    # --- 指定Node类型，更新element的Node编号 ---
+    node_type = [set() for _ in range(numnp_val)]
+    for mat_key_out, group_elements_list in dat_element_groups_dict.items():
+        if not group_elements_list: continue
+        abaqus_elem_type_str_out = mat_key_out[0]
+        elem_type = abaqus_to_dat_type_map_dict[abaqus_elem_type_str_out]
+        for elem_data_out in group_elements_list:
+            elem_data_out["nodes"] = [old_to_new_id[node] for node in elem_data_out["nodes"]]
+            for node in elem_data_out["nodes"]:
+                node_type[node-1].add(elem_type)
 
     print(f"写入 DAT 文件: {dat_filepath}")
     with open(dat_filepath, 'w', encoding='utf-8') as f_out:
         f_out.write(f"{dat_title_str}\n")
         f_out.write(f"{numnp_val} {numeg_val} {nlcase_val} {modex_val}\n")
 
-        sorted_global_node_ids_list = sorted(global_nodes_coords_bcs.keys())
+        sorted_global_node_ids_list = sorted(new_global_nodes_coords_bcs.keys())
         for gn_id_out in sorted_global_node_ids_list:
-            node_info_out = global_nodes_coords_bcs[gn_id_out]
+            node_info_out = new_global_nodes_coords_bcs[gn_id_out]
             coords_out = node_info_out["coords"]
             bcodes_out = node_info_out["bcode"]
-            f_out.write(
-                f"{gn_id_out}  {bcodes_out[0]} {bcodes_out[1]} {bcodes_out[2]}  {coords_out[0]:.7e} {coords_out[1]:.7e} {coords_out[2]:.7e}\n")
+            if 5 in node_type[gn_id_out-1] or 6 in node_type[gn_id_out-1]:
+                last = 0 if 5 in node_type[gn_id_out-1] else 1
+                if 1 in node_type[gn_id_out-1] or 4 in node_type[gn_id_out-1]:
+                    f_out.write(
+                    f"{gn_id_out} {bcodes_out[0]} {bcodes_out[1]} {bcodes_out[2]} 0 0 {last} {coords_out[0]:.7e} {coords_out[1]:.7e} {coords_out[2]:.7e}\n")
+                else:
+                    first_two = "0 0" if 5 in node_type[gn_id_out-1] else "1 1"
+                    f_out.write(
+                    f"{gn_id_out} {first_two} 0 0 0 {last} {coords_out[0]:.7e} {coords_out[1]:.7e} {coords_out[2]:.7e}\n")
+            else:
+                f_out.write(
+                f"{gn_id_out} {bcodes_out[0]} {bcodes_out[1]} {bcodes_out[2]} {coords_out[0]:.7e} {coords_out[1]:.7e} {coords_out[2]:.7e}\n")
 
         if nlcase_val > 0:
             f_out.write(f"1 0\n")
@@ -610,8 +653,8 @@ def parse_inp_to_dat(inp_filepath, dat_filepath):
 
 
 # --- 主执行块 ---
-inp_file_path = 'Bridge-1.inp'  # 你的 INP 文件路径
-dat_file_path = 'Bridge-1.dat'  # 输出的 DAT 文件路径
+inp_file_path = 'inp2dat/Bridge-1.inp'  # 你的 INP 文件路径
+dat_file_path = 'inp2dat/Bridge-1.dat'  # 输出的 DAT 文件路径
 
 # 调用解析函数
 conversion_summary_data = parse_inp_to_dat(inp_file_path, dat_file_path)
