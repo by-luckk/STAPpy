@@ -170,11 +170,20 @@ def PlotDisp(Coords, disp, scale=1.0, out_dir="output"):
                 thickness = getattr(element._ElementMaterial, 'thickness', 0.01)  # 默认0.1
         
                 # 只考虑z方向的位移(w)和转角(θx, θy)
-                # Disp数组的结构应为: [w1, θx1, θy1, w2, θx2, θy2, ...]
-                w = np.array([disp[n][-3] for n in nn])
-                theta_x = np.array([disp[n][-2] for n in nn])
-                theta_y = np.array([disp[n][-1] for n in nn])
-        
+                w, theta_x, theta_y = [], [], []
+                for n in nn:
+                    if len(disp[n]) == 3 or len(disp[n]) == 5:
+                        w.append(disp[n][-3])
+                        theta_x.append(disp[n][-2])
+                        theta_y.append(disp[n][-1])
+                    else: # len(disp[n]) == 6
+                        w.append(disp[n][2])
+                        theta_x.append(disp[n][3])
+                        theta_y.append(disp[n][4])
+                w = np.array(w)
+                theta_x = np.array(theta_x)
+                theta_y = np.array(theta_y)
+
                 # 变形后位置 - 只有z坐标变化
                 x_disp = x + 0.5 * thickness * (-theta_y) 
                 y_disp = y + 0.5 * thickness * theta_x
