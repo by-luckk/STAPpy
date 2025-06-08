@@ -100,10 +100,10 @@ class CNode(object):
         
         for dof in range(self.NDF):
             if self.bcode[dof] == 0:
-                displacement_info += f"{0.0:18.6e}"
+                displacement_info += f"{0.0:18.17e}"
                 displacement_list.append(0.0)
             else:
-                displacement_info += f"{displacement[self.bcode[dof] - 1]:18.6e}"
+                displacement_info += f"{displacement[self.bcode[dof] - 1]:18.17e}"
                 displacement_list.append(displacement[self.bcode[dof] - 1])
 
         displacement_info += '\n'
