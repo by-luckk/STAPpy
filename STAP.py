@@ -108,7 +108,5 @@ if __name__ == "__main__":
 		time_solution - time_assemble, time_stress
 	)
 	Output.OutputSolutionTime(time_info)
-
-	
-
+	Output.WriteVTK(filename+".vtk")
 	

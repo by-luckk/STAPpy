@@ -306,3 +306,5 @@ def PlotDisp(Coords, disp, scale=1.0, out_dir="output"):
     fig.tight_layout()
     fig.savefig(os.path.join(out_dir, f"displacement_vector.png"))
     plt.close(fig)
+
+# 0.0931

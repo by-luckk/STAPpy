@@ -19,6 +19,7 @@ from element.ElementGroup import ElementTypes
 import datetime
 import numpy as np
 from utils.Plot import PlotDisp
+from utils.Convergence import l2_error
 
 weekday = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", 
            "Saturday", "Sunday"]
@@ -305,20 +306,27 @@ class COutputter(object):
 		self._output_file.write(pre_info)
 
 		# -------- 收集数据 --------
-		node_ids, disp = [], []
+		self.disp = []
 
 		for n in range(FEMData.GetNUMNP()):
 			displacement_list = NodeList[n].WriteNodalDisplacement(self._output_file, displacement)
-
-			node_ids.append(n + 1)
-			disp.append(displacement_list)    
+			self.disp.append(displacement_list)    
+		
+		# convergence test for T3
+		# params = dict(L=1.0, H=1.0, qx=1000.0,
+        #           E=2100.0, nu=0.0, t=1.0)
+		# nodes = np.array([node.XYZ[:2] for node in NodeList])
+		# element_group = FEMData.GetEleGrpList()[0]._ElementList
+		# elems = np.array([[node.NodeNumber-1 for node in element.GetNodes()] for element in element_group], int)
+		# error = l2_error(nodes, elems, np.array(disp), params)
+		# print("L2 error: ", error)
 
 		print("\n", end="")
 		self._output_file.write("\n")
 
 		# -------- 绘图并保存 --------
 		Coords = np.array([[node.XYZ[0], node.XYZ[1], node.XYZ[2]] for node in NodeList])
-		PlotDisp(Coords, disp, scale=vis_scale, out_dir="output")
+		PlotDisp(Coords, self.disp, scale=vis_scale, out_dir="output")
 
 	def OutputElementStress(self):
 		from Domain import Domain
@@ -455,3 +463,66 @@ class COutputter(object):
 		""" Print CPU time used for solution """
 		print(time_info, end="")
 		self._output_file.write(time_info)
+
+	def WriteVTK(self, filename="result.vtk"):
+		"""
+		Export mesh + nodal displacement to VTK Legacy file.
+		"""
+		from Domain import Domain
+		FEM = Domain()
+
+		# --------- 基本数据 ---------
+		NodeList  = FEM.GetNodeList()
+		ng        = FEM.GetEleGrpList()
+		neq       = FEM.GetNEQ()
+
+		# 把 nodal displacement 拆回 (NUMNP, 3)
+		disp_fixed = [row[:3] + [0.0] * (3 - len(row[:3])) for row in self.disp]
+		U = np.array(disp_fixed)
+
+		# --------- VTK HEADER ---------
+		with open(filename, "w") as f:
+			f.write("# vtk DataFile Version 3.0\n")
+			f.write("STAPpy result\nASCII\nDATASET UNSTRUCTURED_GRID\n")
+
+			# --------- POINTS ---------
+			f.write(f"POINTS {len(NodeList)} float\n")
+			for n in NodeList:
+				x, y, z = n.XYZ
+				f.write(f"{x} {y} {z}\n")
+
+			# --------- CELLS ---------
+			all_cells, all_types = [], []
+			for grp in ng:
+				etype = grp.GetElementType()
+				vtk_type = {
+					1: 3,    # Bar  → LINE
+					5: 3,    # Beam → LINE
+					3: 5,    # T3   → TRIANGLE
+					2: 9,    # Q4   → QUAD
+					6: 9,    # Plate→ QUAD
+					7: 9,    # Shell→ QUAD
+					4: 12    # H8   → HEXAHEDRON
+				}.get(etype)
+				for ele in grp._ElementList:
+					conn = [nd.NodeNumber-1 for nd in ele.GetNodes()]
+					all_cells.append(conn)
+					all_types.append(vtk_type)
+
+			# 每行: 节点数 + 节点索引…
+			total_num_ints = sum(len(c)+1 for c in all_cells)
+			f.write(f"\nCELLS {len(all_cells)} {total_num_ints}\n")
+			for c in all_cells:
+				line = " ".join(map(str, c))
+				f.write(f"{len(c)} {line}\n")
+
+			# --------- CELL_TYPES ---------
+			f.write(f"\nCELL_TYPES {len(all_types)}\n")
+			for t in all_types:
+				f.write(f"{t}\n")
+
+			# --------- POINT DATA (位移) ---------
+			f.write(f"\nPOINT_DATA {len(NodeList)}\n")
+			f.write("VECTORS displacement float\n")
+			for ux, uy, uz in U:
+				f.write(f"{ux} {uy} {uz}\n")

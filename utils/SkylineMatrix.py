@@ -43,7 +43,7 @@ class CSkylineMatrix(object):
 		self._DiagonalAddress = np.zeros(N+1, dtype=np.int_)
 
 	def Index(self, i, j):
-		""" Return the index in self._data of (i, j) in K """
+		""" Return the index in self._data of (i, j) in K, start from 1 """
 		if j >= i:
 			return self._DiagonalAddress[j - 1] + (j - i) - 1
 		else:

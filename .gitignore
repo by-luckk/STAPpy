@@ -1,6 +1,7 @@
 output/
 inp2dat/
 *.out
+*.vtk
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
